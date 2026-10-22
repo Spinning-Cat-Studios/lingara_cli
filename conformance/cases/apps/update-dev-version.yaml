@@ -1,0 +1,32 @@
+# 16.10.26ae AC7 — never_moves_a_leased_url_and_refuses_ephemeral_versions
+# 16.10.26ae AC17 — manifest_warnings_print_and_never_fail
+id: apps.update-dev-version
+title: During a live dev lease, update patches the manifest and draft_version only, never render_url or session_id, and re-reads once on version_conflict; the template's manifest warns of nothing
+behaviours: [B5]
+command: apps update
+argv: [apps, update, luba]
+credentials: stored
+project: update-template
+mock: platform_dev
+mock_seed: { held_until: "2026-10-20T15:00:00Z", render_url: "https://shy-owl-1.trycloudflare.com/", version_conflicts: 1 }
+expect:
+  exit: ok
+  stderr: { empty: true }
+  calls:
+    - route: app_dev.get
+    - route: app_dev.patch
+      json: &push
+        draft_version: 1
+        manifest:
+          manifest_version: 1
+          default_locale: en
+          name: { en: Demo, zh-Hans: Demo }
+          description: { en: A Lingara app., zh-Hans: A Lingara app. }
+          render_url: "https://dev.invalid/"
+          slots: [home.side]
+          context: []
+          scopes: []
+          tutor_note: false
+    - route: app_dev.get
+    - route: app_dev.patch
+      json: *push

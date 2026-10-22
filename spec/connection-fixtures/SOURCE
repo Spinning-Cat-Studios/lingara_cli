@@ -1,0 +1,1 @@
+valid/empty.js: the web client's builder fixture connection/fixtures/valid/empty.txt (web/src/features/builder/) at c0e65c806, byte for byte: the only script-free file there. Every other file here is this repository's own (ADR 16.10.26ae D2).

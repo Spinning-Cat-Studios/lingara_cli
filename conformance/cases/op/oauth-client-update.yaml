@@ -1,0 +1,39 @@
+id: op.oauth-client-update
+title: --name renames, --scope makes a new version from the serving one with the scopes replaced, and the private client publishes it
+behaviours: [B1, B5]
+command: oauth_client update
+argv: [client, update, 0b9c4f0e-0000-4000-8000-000000000001, --name, Renamed, --scope, events:read, --scope, events:write, --json]
+credentials: stored
+expect:
+  exit: ok
+  stdout:
+    json: { version: { semver: "1.1.0", state: published }, projection_pending: false }
+exchanges:
+  order: sequence
+  items:
+    - route: oauth_client.rename
+      vars: { id: 0b9c4f0e-0000-4000-8000-000000000001 }
+      request: { json: { name: Renamed } }
+      response: { status: 200, json: { id: 0b9c4f0e-0000-4000-8000-000000000001, name: Renamed } }
+    - route: oauth_client.get
+      vars: { id: 0b9c4f0e-0000-4000-8000-000000000001 }
+      response:
+        status: 200
+        json:
+          id: 0b9c4f0e-0000-4000-8000-000000000001
+          visibility: private
+          serving_version: "1.0.0"
+          versions: [ { semver: "1.0.0", state: published, draft_version: 1 } ]
+    - route: oauth_client.version_get
+      vars: { id: 0b9c4f0e-0000-4000-8000-000000000001, semver: "1.0.0" }
+      response:
+        status: 200
+        json: { semver: "1.0.0", state: published, body: { client_type: confidential, allowed_scopes: [events:read], billing_mode: allowance, redirect_uris: [] } }
+    - route: oauth_client.version_create
+      vars: { id: 0b9c4f0e-0000-4000-8000-000000000001 }
+      request:
+        json: { body: { client_type: confidential, allowed_scopes: [events:read, events:write], billing_mode: allowance, redirect_uris: [] } }
+      response: { status: 201, json: { semver: "1.1.0", state: draft } }
+    - route: oauth_client.publish
+      vars: { id: 0b9c4f0e-0000-4000-8000-000000000001, semver: "1.1.0" }
+      response: { status: 200, json: { version: { semver: "1.1.0", state: published }, projection_pending: false } }

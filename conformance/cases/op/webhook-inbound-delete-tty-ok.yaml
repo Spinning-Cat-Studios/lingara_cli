@@ -1,0 +1,27 @@
+id: op.webhook-inbound-delete-tty-ok
+title: In a terminal, the prompt says senders are refused and names the client that stays
+behaviours: [B3]
+command: webhook inbound delete
+confirm: tty_ok
+argv: [webhook, inbound, delete, 2a4b6c8d-0000-4000-8000-000000000001]
+tty: true
+credentials: stored
+interact:
+  - expect: { message: confirm_yes_no, vars: { kind: inbound webhook, name: Game server, id: 2a4b6c8d-0000-4000-8000-000000000001 } }
+  - expect: { message: consequence_webhook_inbound, vars: { client: 0b9c4f0e-0000-4000-8000-000000000001 } }
+    send: "y\n"
+  - expect: { message: confirm_type_email }
+    send: "dev@conformance.invalid\n"
+expect:
+  exit: ok
+  stdout: { empty: true }
+exchanges:
+  order: sequence
+  items:
+    - route: webhook_inbound.get
+      vars: { id: 2a4b6c8d-0000-4000-8000-000000000001 }
+      response: { status: 200, json: { id: 2a4b6c8d-0000-4000-8000-000000000001, kind: webhook_in, name: Game server, parent_id: 0b9c4f0e-0000-4000-8000-000000000001 } }
+    - route: webhook_inbound.delete
+      vars: { id: 2a4b6c8d-0000-4000-8000-000000000001 }
+      request: { json: { confirm: dev@conformance.invalid } }
+      response: { status: 200, json: { deleted: 1, pinned_by: 0 } }

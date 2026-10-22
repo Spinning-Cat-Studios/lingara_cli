@@ -1,0 +1,20 @@
+id: op.webhook-outbound-get
+title: A 429 with Retry-After to a GET is retried, and the second answer is printed
+behaviours: [B1, B5]
+command: webhook outbound get
+argv: [webhook, outbound, get, 3c5d7e9f-0000-4000-8000-000000000001, --json]
+credentials: stored
+expect:
+  exit: ok
+  stdout:
+    json: { id: 3c5d7e9f-0000-4000-8000-000000000001, kind: webhook_out, enabled: true }
+exchanges:
+  order: sequence
+  items:
+    - route: webhook_outbound.get
+      vars: { id: 3c5d7e9f-0000-4000-8000-000000000001 }
+      response: { status: 429, headers: { retry-after: "1" }, json: { code: rate_limited, error: Slow down. } }
+    - route: webhook_outbound.get
+      vars: { id: 3c5d7e9f-0000-4000-8000-000000000001 }
+      min_gap_ms: 900
+      response: { status: 200, json: { id: 3c5d7e9f-0000-4000-8000-000000000001, kind: webhook_out, enabled: true } }

@@ -1,0 +1,9 @@
+id: apps.dev-reset-conflict-tunnel
+title: apps dev refuses --reset with --tunnel, since --reset does one thing only, as usage before any request
+behaviours: [B2]
+command: apps dev
+argv: [apps, dev, --reset, --tunnel, cloudflared]
+credentials: stored
+expect:
+  exit: usage
+  stdout: { empty: true }

@@ -1,0 +1,9 @@
+id: apps.create-name-invalid
+title: A name that is not a lowercase handle is refused with app_name_invalid before anything is written
+behaviours: [B2]
+command: apps create
+argv: [apps, create, Demo_App, --no-register]
+expect:
+  exit: usage
+  stdout: { empty: true }
+  stderr: { message: app_name_invalid, vars: { name: Demo_App } }

@@ -1,0 +1,10 @@
+# 16.10.26ae AC22 — pins_are_local_and_the_config_is_selectable
+id: apps.pin-by-name-needs-path
+title: Pinning by name without --path is usage, since nothing says where the project is
+behaviours: [B2]
+command: apps pin
+argv: [apps, pin, bubbles]
+project: pin
+expect:
+  exit: usage
+  stdout: { empty: true }

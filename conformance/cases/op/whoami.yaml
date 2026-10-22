@@ -1,0 +1,19 @@
+id: op.whoami
+title: whoami prints EMAIL DEVELOPER SCOPES PROFILE, the scopes from the stored record
+behaviours: [B1]
+command: whoami
+argv: [whoami]
+credentials: stored
+expect:
+  exit: ok
+  stdout:
+    table:
+      columns: [EMAIL, DEVELOPER, SCOPES, PROFILE]
+      rows:
+        - [dev@conformance.invalid, 0b9c4f0e-0000-4000-8000-0000000000de, "platform:read platform:write canvas:read canvas:write", default]
+exchanges:
+  order: sequence
+  items:
+    - route: developer.me
+      request: { headers: { authorization: { equals: "Bearer lgr_at_conformance_stored" } } }
+      response: { status: 200, json: { developer_id: 0b9c4f0e-0000-4000-8000-0000000000de, email: dev@conformance.invalid, display_name: Dev } }

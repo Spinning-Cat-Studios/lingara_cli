@@ -1,0 +1,27 @@
+id: b3.tty-declined
+title: In a terminal, answering n exits not_confirmed after the read, and sends no delete
+behaviours: [B3]
+command: oauth_client delete
+confirm: tty_declined
+argv: [client, delete, 0b9c4f0e-0000-4000-8000-000000000001]
+tty: true
+credentials: stored
+interact:
+  - expect: { message: confirm_yes_no, vars: { kind: OAuth client, name: My server, id: 0b9c4f0e-0000-4000-8000-000000000001 } }
+    send: "n\n"
+expect:
+  exit: not_confirmed
+  stdout: { empty: true }
+  stderr: { message: confirm_declined }
+exchanges:
+  order: sequence
+  items:
+    - route: oauth_client.get
+      vars: { id: 0b9c4f0e-0000-4000-8000-000000000001 }
+      response:
+        status: 200
+        json:
+          id: 0b9c4f0e-0000-4000-8000-000000000001
+          kind: oauth_client
+          name: My server
+          children: [ { id: 7d1e2f30-0000-4000-8000-000000000001, kind: app, name: Flashcards } ]

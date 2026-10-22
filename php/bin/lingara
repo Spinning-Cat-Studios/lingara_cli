@@ -1,0 +1,28 @@
+#!/usr/bin/env php
+<?php
+
+// `lingara`, the PHP kit (ADR 16.10.26af D6). The same script runs from the
+// checkout, from Composer's global bin (`composer global require
+// spinningcatstudios/lingara-cli`, whose proxy names the autoloader in
+// `$_composer_autoload_path`) and inside lingara.phar.
+
+declare(strict_types=1);
+
+(static function (): void {
+    $candidates = [
+        $GLOBALS['_composer_autoload_path'] ?? null,
+        __DIR__ . '/../vendor/autoload.php',
+        __DIR__ . '/../../../autoload.php',
+    ];
+    foreach ($candidates as $autoload) {
+        if (is_string($autoload) && is_file($autoload)) {
+            require $autoload;
+            return;
+        }
+    }
+    fwrite(STDERR, "error: lingara cannot find its dependencies; run composer install (failure)\n");
+    exit(1);
+})();
+
+$args = array_values(array_filter(array_slice((array) ($_SERVER['argv'] ?? []), 1), 'is_string'));
+exit(\Lingara\Cli\Main::main($args));

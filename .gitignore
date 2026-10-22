@@ -1,0 +1,10 @@
+target/
+node_modules/
+.gradle/
+.kotlin/
+build/
+dist/
+vendor/
+# The pinned release-manifest (make/release.mk, ADR 22.10.26s).
+.tools/
+.DS_Store

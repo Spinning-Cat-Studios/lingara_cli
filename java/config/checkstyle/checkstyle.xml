@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC
+    "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+    "https://checkstyle.org/dtds/configuration_1_3.dtd">
+<!--
+  The Java kit's source budgets (ADR 16.10.26af, Files to Change): the
+  repo's .code-health/thresholds.toml numbers, which the TypeScript kit's
+  ESLint config also carries. 300 lines per file, 15 methods per
+  type, 50 lines per method, cyclomatic complexity 10, 5 parameters. The
+  15-files-per-directory budget is java/build.gradle.kts's checkFolderSizes.
+-->
+<module name="Checker">
+  <property name="charset" value="UTF-8"/>
+  <property name="severity" value="error"/>
+  <module name="FileLength">
+    <property name="max" value="300"/>
+  </module>
+  <module name="TreeWalker">
+    <module name="MethodLength">
+      <property name="max" value="50"/>
+    </module>
+    <module name="CyclomaticComplexity">
+      <property name="max" value="10"/>
+    </module>
+    <module name="ParameterNumber">
+      <property name="max" value="5"/>
+    </module>
+    <module name="MethodCount">
+      <property name="maxTotal" value="15"/>
+    </module>
+  </module>
+</module>

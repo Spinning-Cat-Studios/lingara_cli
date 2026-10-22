@@ -1,0 +1,11 @@
+# 16.10.26ae AC22 — pins_are_local_and_the_config_is_selectable
+id: apps.pin-unpin-unknown
+title: apps unpin of a name no row has is usage with app_row_unknown
+behaviours: [B2]
+command: apps unpin
+argv: [apps, unpin, nope]
+project: pin
+expect:
+  exit: usage
+  stdout: { empty: true }
+  stderr: { message: app_row_unknown, vars: { value: nope } }

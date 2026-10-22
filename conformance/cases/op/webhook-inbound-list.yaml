@@ -1,0 +1,22 @@
+id: op.webhook-inbound-list
+title: webhook inbound list prints ID NAME CLIENT EVENTS
+behaviours: [B1]
+command: webhook inbound list
+argv: [webhook, inbound, list]
+credentials: stored
+expect:
+  exit: ok
+  stdout:
+    table:
+      columns: [ID, NAME, CLIENT, EVENTS]
+      rows:
+        - [2a4b6c8d-0000-4000-8000-000000000001, Game server, 0b9c4f0e-0000-4000-8000-000000000001, world.practice_completed]
+exchanges:
+  order: sequence
+  items:
+    - route: webhook_inbound.list
+      response:
+        status: 200
+        json:
+          items: [ { id: 2a4b6c8d-0000-4000-8000-000000000001, kind: webhook_in, name: Game server, parent_id: 0b9c4f0e-0000-4000-8000-000000000001, event_types: [world.practice_completed] } ]
+          next_cursor: null

@@ -1,0 +1,9 @@
+id: op.oauth-client-create-ci-type-conflict
+title: --ci fixes the client type, so --ci with --type is usage and sends nothing
+behaviours: [B2]
+command: oauth_client create
+argv: [client, create, --name, x, --ci, --type, public]
+credentials: stored
+expect:
+  exit: usage
+  stdout: { empty: true }

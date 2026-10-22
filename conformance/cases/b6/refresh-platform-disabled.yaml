@@ -1,0 +1,18 @@
+id: b6.refresh-platform-disabled
+title: A refresh refused with B4's lingara_code is platform_disabled, not "run lingara login", and keeps the stored credential
+behaviours: [B6, B4]
+command: apps list
+argv: [apps, list]
+credentials: stored
+expect:
+  exit: platform_disabled
+  stdout: { empty: true }
+  stderr: { message: platform_disabled }
+  stored_credentials: present
+exchanges:
+  order: sequence
+  items:
+    - route: app.list
+      response: { status: 401, headers: { www-authenticate: 'Bearer error="invalid_token"' } }
+    - route: oauth.token
+      response: { status: 400, json: { error: invalid_grant, lingara_code: "{platform_access_code}" } }

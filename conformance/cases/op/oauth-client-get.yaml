@@ -1,0 +1,25 @@
+id: op.oauth-client-get
+title: A get prints B1's FIELD VALUE table, one row per member in the server's order
+behaviours: [B1]
+command: oauth_client get
+argv: [client, get, 0b9c4f0e-0000-4000-8000-000000000001]
+credentials: stored
+expect:
+  exit: ok
+  stdout:
+    table:
+      columns: [FIELD, VALUE]
+      rows:
+        - [id, 0b9c4f0e-0000-4000-8000-000000000001]
+        - [name, My server]
+        - [serving_version, "1.0.0"]
+        - [client_id, lgr_cid_conformance_server]
+        - [parent_id, "-"]
+exchanges:
+  order: sequence
+  items:
+    - route: oauth_client.get
+      vars: { id: 0b9c4f0e-0000-4000-8000-000000000001 }
+      response:
+        status: 200
+        json: { id: 0b9c4f0e-0000-4000-8000-000000000001, name: My server, serving_version: "1.0.0", client_id: lgr_cid_conformance_server, parent_id: null }

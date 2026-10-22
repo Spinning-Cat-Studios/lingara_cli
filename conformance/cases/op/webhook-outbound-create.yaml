@@ -1,0 +1,35 @@
+id: op.webhook-outbound-create
+title: An outbound webhook is created under its client, published, given its signing secret once, and read
+behaviours: [B1]
+command: webhook outbound create
+argv: [webhook, outbound, create, --client, 0b9c4f0e-0000-4000-8000-000000000001, --url, https://hooks.example.com/lingara, --event, lesson_plan.ready, --json]
+credentials: stored
+expect:
+  exit: ok
+  stdout:
+    json:
+      id: 3c5d7e9f-0000-4000-8000-000000000001
+      kind: webhook_out
+      parent_id: 0b9c4f0e-0000-4000-8000-000000000001
+      signing_secret: true
+      secret: { id: 4d4d4d4d-0000-4000-8000-000000000005, value: lgr_cs_conformance_signing }
+exchanges:
+  order: sequence
+  items:
+    - route: webhook_outbound.create
+      request:
+        json:
+          kind: webhook_out
+          name: https://hooks.example.com/lingara
+          parent_id: 0b9c4f0e-0000-4000-8000-000000000001
+          body: { url: https://hooks.example.com/lingara, event_types: [lesson_plan.ready] }
+      response: { status: 201, json: { id: 3c5d7e9f-0000-4000-8000-000000000001, visibility: private, version: { semver: "1.0.0" } } }
+    - route: webhook_outbound.publish
+      vars: { id: 3c5d7e9f-0000-4000-8000-000000000001, semver: "1.0.0" }
+      response: { status: 200, json: { version: { semver: "1.0.0", state: published } } }
+    - route: webhook_outbound.secret_create
+      vars: { id: 3c5d7e9f-0000-4000-8000-000000000001 }
+      response: { status: 201, json: { secret_id: 4d4d4d4d-0000-4000-8000-000000000005, secret: lgr_cs_conformance_signing } }
+    - route: webhook_outbound.get
+      vars: { id: 3c5d7e9f-0000-4000-8000-000000000001 }
+      response: { status: 200, json: { id: 3c5d7e9f-0000-4000-8000-000000000001, kind: webhook_out, parent_id: 0b9c4f0e-0000-4000-8000-000000000001, signing_secret: true } }

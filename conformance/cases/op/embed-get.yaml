@@ -1,0 +1,18 @@
+id: op.embed-get
+title: embed get --json prints the server's object unchanged
+behaviours: [B1]
+command: embed get
+argv: [embed, get, 5e3a0c11-0000-4000-8000-000000000001, --json]
+credentials: stored
+expect:
+  exit: ok
+  stdout:
+    json: { id: 5e3a0c11-0000-4000-8000-000000000001, kind: embed, name: Word game, parent_id: 0b9c4f0e-0000-4000-8000-000000000001, client_id: lgr_cid_conformance_embed, children: [] }
+exchanges:
+  order: sequence
+  items:
+    - route: embed.get
+      vars: { id: 5e3a0c11-0000-4000-8000-000000000001 }
+      response:
+        status: 200
+        json: { id: 5e3a0c11-0000-4000-8000-000000000001, kind: embed, name: Word game, parent_id: 0b9c4f0e-0000-4000-8000-000000000001, client_id: lgr_cid_conformance_embed, children: [] }

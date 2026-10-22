@@ -1,0 +1,11 @@
+# A public client id and a key that merely contains a secret word are fine.
+schema = 1
+
+[[apps]]
+name = "luba"
+path = "."
+port = 8787
+
+[apps.env]
+LINGARA_CLIENT_ID = "lgr_cid_conformance_app"
+TOKENIZER = "bpe"

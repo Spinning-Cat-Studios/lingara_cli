@@ -1,0 +1,238 @@
+{
+  "schema": 1,
+  "about": "ADR 16.10.26ad D7: canvas apply's plan rules, pinned for every kit. Each vector is a saved draft (definition and recorded runtime ids), the live oauth_client / webhook_out / app list rows, and what the planner must make of them: the kept records and the dry-run ops, or the node a refusal names. Where `verdicts` is given, `steps` are the argvs apply runs for them (an id made earlier in the run is `<handle>`, an app op's manifest file `<handle.manifest>`), or `stop` is why apply stops before any write. The web's plan.ts is the source of these rules; nothing ties it to this file mechanically, so a change there updates this file by hand.",
+  "vectors": [
+    {
+      "name": "a fresh recipe plans every field node as a create, in topological order",
+      "definition": {
+        "schema": 2,
+        "nodes": [
+          { "id": "n3", "kind": "webhook", "position": [0, 0], "fields": { "url": "https://hooks.example.com/lingara", "events": ["lesson_plan.ready"] }, "script": null, "custom": false, "script_name": null, "params": {} },
+          { "id": "n1", "kind": "client", "position": [0, 0], "fields": { "name": "My server", "scopes": ["events:read"] }, "script": null, "custom": false, "script_name": null, "params": {} },
+          { "id": "n2", "kind": "secret", "position": [0, 0], "fields": {}, "script": null, "custom": false, "script_name": null, "params": {} }
+        ],
+        "edges": [ { "from": "n1", "to": "n2" }, { "from": "n1", "to": "n3" } ]
+      },
+      "recorded": {},
+      "live": { "oauth_client": [], "webhook_out": [], "app": [] },
+      "expect": {
+        "kept": {},
+        "ops": [
+          { "handle": "n1", "kind": "client", "op": "create", "body": { "name": "My server", "scopes": ["events:read"], "billing_mode": "allowance" } },
+          { "handle": "n3", "kind": "webhook", "op": "create", "client": { "handle": "n1" }, "body": { "url": "https://hooks.example.com/lingara", "event_types": ["lesson_plan.ready"] } },
+          { "handle": "n2", "kind": "secret", "op": "create", "client": { "handle": "n1" } }
+        ]
+      },
+      "verdicts": [
+        { "handle": "n1", "kind": "client", "op": "create", "verdict": "would_create" },
+        { "handle": "n3", "kind": "webhook", "op": "create", "verdict": "would_create", "depends_on": ["n1"] },
+        { "handle": "n2", "kind": "secret", "op": "create", "verdict": "would_create", "note": "minted_with_client", "depends_on": ["n1"] }
+      ],
+      "steps": [
+        { "handle": "n1", "action": "create", "records": "runtime_id", "argv": ["oauth_client", "create", "--name", "My server", "--scope", "events:read"] },
+        { "handle": "n3", "action": "create", "records": "runtime_id", "argv": ["webhook", "outbound", "create", "--client", "<n1>", "--url", "https://hooks.example.com/lingara", "--event", "lesson_plan.ready"] },
+        { "handle": "n2", "action": "create", "records": "client_secret", "argv": [] }
+      ]
+    },
+    {
+      "name": "a re-apply keeps live records, plans them as updates, and applies only what changed",
+      "definition": {
+        "schema": 2,
+        "nodes": [
+          { "id": "n1", "kind": "client", "position": [0, 0], "fields": { "name": "My server", "scopes": ["events:read"], "redirectUris": ["https://example.com/cb"] }, "script": null, "custom": false, "script_name": null, "params": {} },
+          { "id": "n2", "kind": "secret", "position": [0, 0], "fields": {}, "script": null, "custom": false, "script_name": null, "params": {} },
+          { "id": "n3", "kind": "webhook", "position": [0, 0], "fields": { "url": "https://hooks.example.com/v2", "events": ["lesson_plan.ready"] }, "script": null, "custom": false, "script_name": null, "params": {} }
+        ],
+        "edges": [ { "from": "n1", "to": "n2" }, { "from": "n1", "to": "n3" } ]
+      },
+      "recorded": { "n1": { "id": "rt-client-1" }, "n2": { "id": "secret-1" }, "n3": { "id": "rt-hook-1" } },
+      "live": {
+        "oauth_client": [ { "id": "po-client-1", "runtime_id": "rt-client-1", "parent_id": null } ],
+        "webhook_out": [ { "id": "po-hook-1", "runtime_id": "rt-hook-1", "parent_id": "po-client-1" } ],
+        "app": []
+      },
+      "expect": {
+        "kept": { "n1": "rt-client-1", "n2": "secret-1", "n3": "rt-hook-1" },
+        "ops": [
+          { "handle": "n1", "kind": "client", "op": "update", "id": "rt-client-1", "body": { "name": "My server", "scopes": ["events:read"], "redirect_uris": ["https://example.com/cb"] } },
+          { "handle": "n3", "kind": "webhook", "op": "update", "id": "rt-hook-1", "body": { "url": "https://hooks.example.com/v2", "event_types": ["lesson_plan.ready"] } }
+        ]
+      },
+      "verdicts": [
+        { "handle": "n1", "kind": "client", "op": "update", "verdict": "would_update", "changes": [] },
+        { "handle": "n3", "kind": "webhook", "op": "update", "verdict": "would_update", "changes": ["url", "enabled"] }
+      ],
+      "steps": [
+        { "handle": "n1", "action": "unchanged", "records": "unchanged", "argv": [] },
+        { "handle": "n3", "action": "update", "records": "unchanged", "argv": ["webhook", "outbound", "update", "po-hook-1", "--url", "https://hooks.example.com/v2", "--enable"] }
+      ]
+    },
+    {
+      "name": "a webhook moved to another client, and a client that is gone, are planned afresh with their dependants",
+      "definition": {
+        "schema": 2,
+        "nodes": [
+          { "id": "n1", "kind": "client", "position": [0, 0], "fields": { "name": "Game server", "scopes": ["events:write"] }, "script": null, "custom": false, "script_name": null, "params": {} },
+          { "id": "n2", "kind": "webhook", "position": [0, 0], "fields": { "url": "https://hooks.example.com/a", "events": ["lesson_plan.ready"] }, "script": null, "custom": false, "script_name": null, "params": {} },
+          { "id": "n4", "kind": "client", "position": [0, 0], "fields": { "name": "Second", "scopes": [] }, "script": null, "custom": false, "script_name": null, "params": {} },
+          { "id": "n5", "kind": "webhook", "position": [0, 0], "fields": { "url": "https://hooks.example.com/b", "events": ["lesson_plan.ready"] }, "script": null, "custom": false, "script_name": null, "params": {} }
+        ],
+        "edges": [ { "from": "n1", "to": "n2" }, { "from": "n4", "to": "n5" } ]
+      },
+      "recorded": { "n1": { "id": "rt-client-1" }, "n2": { "id": "rt-hook-1" }, "n4": { "id": "rt-client-gone" }, "n5": { "id": "rt-hook-5" } },
+      "live": {
+        "oauth_client": [ { "id": "po-client-1", "runtime_id": "rt-client-1", "parent_id": null } ],
+        "webhook_out": [
+          { "id": "po-hook-1", "runtime_id": "rt-hook-1", "parent_id": "po-client-9" },
+          { "id": "po-hook-5", "runtime_id": "rt-hook-5", "parent_id": "po-client-gone" }
+        ],
+        "app": []
+      },
+      "expect": {
+        "kept": { "n1": "rt-client-1" },
+        "ops": [
+          { "handle": "n1", "kind": "client", "op": "update", "id": "rt-client-1", "body": { "name": "Game server", "scopes": ["events:write"] } },
+          { "handle": "n2", "kind": "webhook", "op": "create", "client": { "handle": "n1" }, "body": { "url": "https://hooks.example.com/a", "event_types": ["lesson_plan.ready"] } },
+          { "handle": "n4", "kind": "client", "op": "create", "body": { "name": "Second", "scopes": [], "billing_mode": "allowance" } },
+          { "handle": "n5", "kind": "webhook", "op": "create", "client": { "handle": "n4" }, "body": { "url": "https://hooks.example.com/b", "event_types": ["lesson_plan.ready"] } }
+        ]
+      },
+      "verdicts": [
+        { "handle": "n1", "kind": "client", "op": "update", "verdict": "would_update", "changes": ["name"] },
+        { "handle": "n2", "kind": "webhook", "op": "create", "verdict": "would_create" },
+        { "handle": "n4", "kind": "client", "op": "create", "verdict": "would_create" },
+        { "handle": "n5", "kind": "webhook", "op": "create", "verdict": "would_create" }
+      ],
+      "steps": [
+        { "handle": "n1", "action": "update", "records": "unchanged", "argv": ["oauth_client", "update", "po-client-1", "--name", "Game server", "--scope", "events:write"] },
+        { "handle": "n2", "action": "create", "records": "runtime_id", "argv": ["webhook", "outbound", "create", "--client", "po-client-1", "--url", "https://hooks.example.com/a", "--event", "lesson_plan.ready"] },
+        { "handle": "n4", "action": "create", "records": "runtime_id", "argv": ["oauth_client", "create", "--name", "Second"] },
+        { "handle": "n5", "action": "create", "records": "runtime_id", "argv": ["webhook", "outbound", "create", "--client", "<n4>", "--url", "https://hooks.example.com/b", "--event", "lesson_plan.ready"] }
+      ]
+    },
+    {
+      "name": "an app node's fields become lingara.v1's manifest wire form, registered under its client",
+      "definition": {
+        "schema": 2,
+        "nodes": [
+          { "id": "n1", "kind": "client", "position": [0, 0], "fields": { "name": "Cards", "scopes": ["vocab:read"] }, "script": null, "custom": false, "script_name": null, "params": {} },
+          { "id": "n2", "kind": "app", "position": [0, 0], "fields": { "manifest": { "name": "Flashcards", "description": "Cards after a lesson", "renderUrl": "https://cards.example.com/render", "slots": ["lesson.end"] } }, "script": null, "custom": false, "script_name": null, "params": {} }
+        ],
+        "edges": [ { "from": "n1", "to": "n2" } ]
+      },
+      "recorded": {},
+      "live": { "oauth_client": [], "webhook_out": [], "app": [] },
+      "expect": {
+        "kept": {},
+        "ops": [
+          { "handle": "n1", "kind": "client", "op": "create", "body": { "name": "Cards", "scopes": ["vocab:read"], "billing_mode": "allowance" } },
+          { "handle": "n2", "kind": "app", "op": "create", "client": { "handle": "n1" }, "body": { "manifest": { "manifest_version": 1, "default_locale": "en", "name": { "en": "Flashcards" }, "description": { "en": "Cards after a lesson" }, "render_url": "https://cards.example.com/render", "slots": ["lesson.end"], "context": [], "scopes": [], "tutor_note": false } } }
+        ]
+      },
+      "verdicts": [
+        { "handle": "n1", "kind": "client", "op": "create", "verdict": "would_create" },
+        { "handle": "n2", "kind": "app", "op": "create", "verdict": "would_create" }
+      ],
+      "steps": [
+        { "handle": "n1", "action": "create", "records": "runtime_id", "argv": ["oauth_client", "create", "--name", "Cards", "--scope", "vocab:read"] },
+        { "handle": "n2", "action": "create", "records": "runtime_id", "argv": ["apps", "create", "Flashcards", "--client", "<n1>", "--manifest", "<n2.manifest>"] }
+      ]
+    },
+    {
+      "name": "a secret node with no minted secret is its own secret create",
+      "definition": {
+        "schema": 2,
+        "nodes": [
+          { "id": "n1", "kind": "client", "position": [0, 0], "fields": { "name": "My server", "scopes": [] }, "script": null, "custom": false, "script_name": null, "params": {} },
+          { "id": "n2", "kind": "secret", "position": [0, 0], "fields": {}, "script": null, "custom": false, "script_name": null, "params": {} }
+        ],
+        "edges": [ { "from": "n1", "to": "n2" } ]
+      },
+      "recorded": { "n1": { "id": "rt-client-1" } },
+      "live": { "oauth_client": [ { "id": "po-client-1", "runtime_id": "rt-client-1", "parent_id": null } ], "webhook_out": [], "app": [] },
+      "expect": {
+        "kept": { "n1": "rt-client-1" },
+        "ops": [
+          { "handle": "n1", "kind": "client", "op": "update", "id": "rt-client-1", "body": { "name": "My server", "scopes": [] } },
+          { "handle": "n2", "kind": "secret", "op": "create", "client": { "handle": "n1" } }
+        ]
+      },
+      "verdicts": [
+        { "handle": "n1", "kind": "client", "op": "update", "verdict": "would_update", "changes": [] },
+        { "handle": "n2", "kind": "secret", "op": "create", "verdict": "would_create" }
+      ],
+      "steps": [
+        { "handle": "n1", "action": "unchanged", "records": "unchanged", "argv": [] },
+        { "handle": "n2", "action": "create", "records": "secret_id", "argv": ["oauth_client", "secret", "create", "po-client-1"] }
+      ]
+    },
+    {
+      "name": "a node that runs a script refuses the plan, by its handle",
+      "definition": {
+        "schema": 2,
+        "nodes": [
+          { "id": "n1", "kind": "client", "position": [0, 0], "fields": { "name": "My server", "scopes": [] }, "script": null, "custom": false, "script_name": null, "params": {} },
+          { "id": "n3", "kind": "webhook", "position": [0, 0], "fields": {}, "script": "return lingara.webhook({ client: input.client, url: 'https://x', events: [] })", "custom": true, "script_name": null, "params": {} }
+        ],
+        "edges": [ { "from": "n1", "to": "n3" } ]
+      },
+      "recorded": {},
+      "live": { "oauth_client": [], "webhook_out": [], "app": [] },
+      "expect": { "refused": "n3" }
+    },
+    {
+      "name": "an unexpected would_replace stops apply before any write",
+      "definition": {
+        "schema": 2,
+        "nodes": [
+          { "id": "n1", "kind": "client", "position": [0, 0], "fields": { "name": "My server", "scopes": ["events:read"] }, "script": null, "custom": false, "script_name": null, "params": {} },
+          { "id": "n2", "kind": "webhook", "position": [0, 0], "fields": { "url": "https://hooks.example.com/new", "events": ["lesson_plan.ready"] }, "script": null, "custom": false, "script_name": null, "params": {} }
+        ],
+        "edges": [ { "from": "n1", "to": "n2" } ]
+      },
+      "recorded": { "n1": { "id": "rt-client-1" }, "n2": { "id": "rt-hook-1" } },
+      "live": {
+        "oauth_client": [ { "id": "po-client-1", "runtime_id": "rt-client-1", "parent_id": null } ],
+        "webhook_out": [ { "id": "po-hook-1", "runtime_id": "rt-hook-1", "parent_id": "po-client-1" } ],
+        "app": []
+      },
+      "expect": {
+        "kept": { "n1": "rt-client-1", "n2": "rt-hook-1" },
+        "ops": [
+          { "handle": "n1", "kind": "client", "op": "update", "id": "rt-client-1", "body": { "name": "My server", "scopes": ["events:read"] } },
+          { "handle": "n2", "kind": "webhook", "op": "update", "id": "rt-hook-1", "body": { "url": "https://hooks.example.com/new", "event_types": ["lesson_plan.ready"] } }
+        ]
+      },
+      "verdicts": [
+        { "handle": "n1", "kind": "client", "op": "update", "verdict": "would_update", "changes": [] },
+        { "handle": "n2", "kind": "webhook", "op": "update", "verdict": "would_replace", "replaces": "rt-hook-1" }
+      ],
+      "stop": { "replace": "n2" }
+    },
+    {
+      "name": "every refused verdict is named, and nothing runs",
+      "definition": {
+        "schema": 2,
+        "nodes": [
+          { "id": "n1", "kind": "client", "position": [0, 0], "fields": { "name": "My server", "scopes": ["nope:nope"] }, "script": null, "custom": false, "script_name": null, "params": {} },
+          { "id": "n2", "kind": "webhook", "position": [0, 0], "fields": { "url": "http://localhost", "events": ["lesson_plan.ready"] }, "script": null, "custom": false, "script_name": null, "params": {} }
+        ],
+        "edges": [ { "from": "n1", "to": "n2" } ]
+      },
+      "recorded": {},
+      "live": { "oauth_client": [], "webhook_out": [], "app": [] },
+      "expect": {
+        "kept": {},
+        "ops": [
+          { "handle": "n1", "kind": "client", "op": "create", "body": { "name": "My server", "scopes": ["nope:nope"], "billing_mode": "allowance" } },
+          { "handle": "n2", "kind": "webhook", "op": "create", "client": { "handle": "n1" }, "body": { "url": "http://localhost", "event_types": ["lesson_plan.ready"] } }
+        ]
+      },
+      "verdicts": [
+        { "handle": "n1", "kind": "client", "op": "create", "verdict": "refused", "code": "oauth_client_scope_unknown", "error": "Unknown scope." },
+        { "handle": "n2", "kind": "webhook", "op": "create", "verdict": "refused", "code": "webhook_url_refused", "error": "That URL is not allowed." }
+      ],
+      "stop": { "refused": ["n1", "n2"] }
+    }
+  ]
+}

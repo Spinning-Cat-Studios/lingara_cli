@@ -1,0 +1,351 @@
+{
+  "SOURCE": "lingara_app_framework_sdk conformance/vectors/manifest-warnings.json at 7b8ce73 (ADR 16.10.26aj D5), unchanged but for this member. The CLI kits implement the same rule over the wire manifest (ADR 16.10.26ae D6 step 5).",
+  "description": "ADR 16.10.26aj D5: the listing's derived locales and its warnings, one answer in eight places (Backend ADR 16.10.26ah D5, D7 mirror these cases by hand). manifest is the wire form; expect is {locales, warnings}. locales: the locales where name and description both have an entry, and long_description too when it is present and not null, sorted by byte order. warnings: a closed list, v1 [single_locale] when locales is exactly [default_locale], else []. Both are defined on a valid manifest only: for one the manifest rules refuse, both are []. A warning never refuses anything.",
+  "vectors": [
+    {
+      "name": "single-locale",
+      "manifest": {
+        "manifest_version": 1,
+        "default_locale": "en",
+        "name": {
+          "en": "Daily five"
+        },
+        "description": {
+          "en": "Five words."
+        },
+        "render_url": "https://apps.example.com/lingara/render",
+        "slots": [
+          "home.side",
+          "plans.empty_detail"
+        ]
+      },
+      "expect": {
+        "locales": [
+          "en"
+        ],
+        "warnings": [
+          "single_locale"
+        ]
+      }
+    },
+    {
+      "name": "two-locales",
+      "manifest": {
+        "manifest_version": 1,
+        "default_locale": "en",
+        "name": {
+          "en": "Daily five",
+          "zh-Hans": "每日五词"
+        },
+        "description": {
+          "en": "Five words to review, picked from your plan.",
+          "zh-Hans": "从你的计划中挑选五个要复习的词。"
+        },
+        "render_url": "https://apps.example.com/lingara/render",
+        "slots": [
+          "home.side",
+          "plans.empty_detail"
+        ]
+      },
+      "expect": {
+        "locales": [
+          "en",
+          "zh-Hans"
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "name": "name-only-translation",
+      "manifest": {
+        "manifest_version": 1,
+        "default_locale": "en",
+        "name": {
+          "en": "Daily five",
+          "ja": "毎日五つ"
+        },
+        "description": {
+          "en": "Five words."
+        },
+        "render_url": "https://apps.example.com/lingara/render",
+        "slots": [
+          "home.side",
+          "plans.empty_detail"
+        ]
+      },
+      "expect": {
+        "locales": [
+          "en"
+        ],
+        "warnings": [
+          "single_locale"
+        ]
+      }
+    },
+    {
+      "name": "description-only-translation",
+      "manifest": {
+        "manifest_version": 1,
+        "default_locale": "en",
+        "name": {
+          "en": "Daily five"
+        },
+        "description": {
+          "en": "Five words.",
+          "ja": "五つ"
+        },
+        "render_url": "https://apps.example.com/lingara/render",
+        "slots": [
+          "home.side",
+          "plans.empty_detail"
+        ]
+      },
+      "expect": {
+        "locales": [
+          "en"
+        ],
+        "warnings": [
+          "single_locale"
+        ]
+      }
+    },
+    {
+      "name": "long-description-narrows",
+      "manifest": {
+        "manifest_version": 1,
+        "default_locale": "en",
+        "name": {
+          "en": "Daily five",
+          "zh-Hans": "每日五词"
+        },
+        "description": {
+          "en": "Five words to review, picked from your plan.",
+          "zh-Hans": "从你的计划中挑选五个要复习的词。"
+        },
+        "render_url": "https://apps.example.com/lingara/render",
+        "slots": [
+          "home.side",
+          "plans.empty_detail"
+        ],
+        "long_description": {
+          "en": "Para one."
+        }
+      },
+      "expect": {
+        "locales": [
+          "en"
+        ],
+        "warnings": [
+          "single_locale"
+        ]
+      }
+    },
+    {
+      "name": "long-description-covers",
+      "manifest": {
+        "manifest_version": 1,
+        "default_locale": "en",
+        "name": {
+          "en": "Daily five",
+          "zh-Hans": "每日五词"
+        },
+        "description": {
+          "en": "Five words to review, picked from your plan.",
+          "zh-Hans": "从你的计划中挑选五个要复习的词。"
+        },
+        "render_url": "https://apps.example.com/lingara/render",
+        "slots": [
+          "home.side",
+          "plans.empty_detail"
+        ],
+        "long_description": {
+          "en": "Para one.",
+          "zh-Hans": "第一段。"
+        }
+      },
+      "expect": {
+        "locales": [
+          "en",
+          "zh-Hans"
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "name": "long-description-null-is-absent",
+      "manifest": {
+        "manifest_version": 1,
+        "default_locale": "en",
+        "name": {
+          "en": "Daily five",
+          "zh-Hans": "每日五词"
+        },
+        "description": {
+          "en": "Five words to review, picked from your plan.",
+          "zh-Hans": "从你的计划中挑选五个要复习的词。"
+        },
+        "render_url": "https://apps.example.com/lingara/render",
+        "slots": [
+          "home.side",
+          "plans.empty_detail"
+        ],
+        "long_description": null
+      },
+      "expect": {
+        "locales": [
+          "en",
+          "zh-Hans"
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "name": "byte-order",
+      "manifest": {
+        "manifest_version": 1,
+        "default_locale": "ja",
+        "name": {
+          "zh-Hant": "a",
+          "ja": "b",
+          "en": "c",
+          "zh-Hans": "d",
+          "ar": "e"
+        },
+        "description": {
+          "zh-Hans": "d",
+          "en": "c",
+          "ja": "b",
+          "ar": "e",
+          "zh-Hant": "a"
+        },
+        "render_url": "https://apps.example.com/lingara/render",
+        "slots": [
+          "home.side",
+          "plans.empty_detail"
+        ]
+      },
+      "expect": {
+        "locales": [
+          "ar",
+          "en",
+          "ja",
+          "zh-Hans",
+          "zh-Hant"
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "name": "non-default-single",
+      "manifest": {
+        "manifest_version": 1,
+        "default_locale": "ja",
+        "name": {
+          "ja": "毎日五つ",
+          "en": "Daily five"
+        },
+        "description": {
+          "ja": "五つ"
+        },
+        "render_url": "https://apps.example.com/lingara/render",
+        "slots": [
+          "home.side",
+          "plans.empty_detail"
+        ]
+      },
+      "expect": {
+        "locales": [
+          "ja"
+        ],
+        "warnings": [
+          "single_locale"
+        ]
+      }
+    },
+    {
+      "name": "image-alt-not-counted",
+      "manifest": {
+        "manifest_version": 1,
+        "default_locale": "en",
+        "name": {
+          "en": "Daily five"
+        },
+        "description": {
+          "en": "Five words."
+        },
+        "render_url": "https://apps.example.com/lingara/render",
+        "slots": [
+          "home.side",
+          "plans.empty_detail"
+        ],
+        "images": [
+          {
+            "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "role": "hero",
+            "alt": {
+              "en": "Map",
+              "ja": "地図"
+            }
+          }
+        ]
+      },
+      "expect": {
+        "locales": [
+          "en"
+        ],
+        "warnings": [
+          "single_locale"
+        ]
+      }
+    },
+    {
+      "name": "invalid-manifest-is-empty",
+      "manifest": {
+        "manifest_version": 2,
+        "default_locale": "en",
+        "name": {
+          "en": "Daily five"
+        },
+        "description": {
+          "en": "Five words."
+        },
+        "render_url": "https://apps.example.com/lingara/render",
+        "slots": [
+          "home.side",
+          "plans.empty_detail"
+        ]
+      },
+      "expect": {
+        "locales": [],
+        "warnings": []
+      }
+    },
+    {
+      "name": "refused-locales-key-is-empty",
+      "manifest": {
+        "manifest_version": 1,
+        "default_locale": "en",
+        "name": {
+          "en": "Daily five",
+          "zh-Hans": "每日五词"
+        },
+        "description": {
+          "en": "Five words to review, picked from your plan.",
+          "zh-Hans": "从你的计划中挑选五个要复习的词。"
+        },
+        "render_url": "https://apps.example.com/lingara/render",
+        "slots": [
+          "home.side",
+          "plans.empty_detail"
+        ],
+        "locales": [
+          "en"
+        ]
+      },
+      "expect": {
+        "locales": [],
+        "warnings": []
+      }
+    }
+  ]
+}

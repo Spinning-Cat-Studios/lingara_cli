@@ -1,0 +1,15 @@
+id: b6.ci-mint-platform-disabled
+title: A CI mint refused unauthorized_client with B4's lingara_code is platform_disabled
+behaviours: [B6, B4]
+command: apps list
+argv: [apps, list]
+credentials: ci
+expect:
+  exit: platform_disabled
+  stdout: { empty: true }
+  stderr: { message: platform_disabled }
+exchanges:
+  order: sequence
+  items:
+    - route: oauth.token
+      response: { status: 400, json: { error: unauthorized_client, lingara_code: "{platform_access_code}" } }

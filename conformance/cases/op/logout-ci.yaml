@@ -1,0 +1,10 @@
+id: op.logout-ci
+title: Under CI credentials nothing is stored, so logout is usage, says so, and sends nothing
+behaviours: [B6]
+command: logout
+argv: [logout]
+credentials: ci
+expect:
+  exit: usage
+  stdout: { empty: true }
+  stderr: { message: login_ci_not_needed }

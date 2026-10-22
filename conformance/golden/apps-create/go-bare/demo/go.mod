@@ -1,0 +1,5 @@
+module demo
+
+go 1.23
+
+require github.com/Spinning-Cat-Studios/lingara_app_framework_sdk/go v0.1.0-alpha.8

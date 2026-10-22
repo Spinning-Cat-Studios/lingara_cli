@@ -1,0 +1,41 @@
+id: op.embed-create
+title: An embed is its metered confidential client first (never naming embed:mint), the client's secret, then the embed object
+behaviours: [B1, B5]
+command: embed create
+argv: [embed, create, --name, Word game, --origin, https://game.example.com, --scope, vocab:read, --json]
+credentials: stored
+expect:
+  exit: ok
+  stdout:
+    json:
+      id: 5e3a0c11-0000-4000-8000-000000000001
+      kind: embed
+      name: Word game
+      parent_id: 0b9c4f0e-0000-4000-8000-000000000001
+      client_id: lgr_cid_conformance_embed
+      secret: { id: 4d4d4d4d-0000-4000-8000-000000000003, value: lgr_cs_conformance_embed }
+exchanges:
+  order: sequence
+  items:
+    - route: oauth_client.create
+      request:
+        json: { kind: oauth_client, name: Word game, body: { client_type: confidential, billing_mode: metered, allowed_scopes: [vocab:read] } }
+      response: { status: 201, json: { id: 0b9c4f0e-0000-4000-8000-000000000001, visibility: private, version: { semver: "1.0.0" } } }
+    - route: oauth_client.publish
+      vars: { id: 0b9c4f0e-0000-4000-8000-000000000001, semver: "1.0.0" }
+      response: { status: 200, json: { version: { semver: "1.0.0", state: published } } }
+    - route: oauth_client.secret_create
+      vars: { id: 0b9c4f0e-0000-4000-8000-000000000001 }
+      response: { status: 201, json: { secret_id: 4d4d4d4d-0000-4000-8000-000000000003, secret: lgr_cs_conformance_embed } }
+    - route: embed.create
+      request:
+        json: { kind: embed, name: Word game, parent_id: 0b9c4f0e-0000-4000-8000-000000000001, body: { origins: ["https://game.example.com"] } }
+      response: { status: 201, json: { id: 5e3a0c11-0000-4000-8000-000000000001, visibility: private, version: { semver: "1.0.0" } } }
+    - route: embed.publish
+      vars: { id: 5e3a0c11-0000-4000-8000-000000000001, semver: "1.0.0" }
+      response: { status: 200, json: { version: { semver: "1.0.0", state: published } } }
+    - route: embed.get
+      vars: { id: 5e3a0c11-0000-4000-8000-000000000001 }
+      response:
+        status: 200
+        json: { id: 5e3a0c11-0000-4000-8000-000000000001, kind: embed, name: Word game, parent_id: 0b9c4f0e-0000-4000-8000-000000000001, client_id: lgr_cid_conformance_embed }

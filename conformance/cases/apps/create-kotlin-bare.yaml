@@ -1,0 +1,10 @@
+# 16.10.26ae AC2 — bare_scaffold_has_manifest_command
+id: apps.create-kotlin-bare
+title: apps create --bare writes no lingara/connection.js, the manifest as Kotlin, and a row with manifest_command, byte for byte
+behaviours: [B1]
+command: apps create
+argv: [apps, create, demo, --lang, kotlin, --bare, --no-register]
+expect:
+  exit: ok
+  stdout: { empty: true }
+  files: { golden: apps-create/kotlin-bare }

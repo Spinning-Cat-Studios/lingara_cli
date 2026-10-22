@@ -1,0 +1,8 @@
+id: b2.unknown-command
+title: An unknown command exits usage and sends nothing
+behaviours: [B2]
+argv: [nope]
+credentials: stored
+expect:
+  exit: usage
+  stdout: { empty: true }

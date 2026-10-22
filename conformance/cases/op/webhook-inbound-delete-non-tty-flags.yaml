@@ -1,0 +1,17 @@
+id: op.webhook-inbound-delete-non-tty-flags
+title: With -y and a matching --confirm, the inbound webhook version delete is the only request
+behaviours: [B3]
+command: webhook inbound delete
+confirm: non_tty_flags
+argv: [webhook, inbound, delete, 2a4b6c8d-0000-4000-8000-000000000001, --version, "1.0.0", --yes, "--confirm=dev@conformance.invalid"]
+credentials: stored
+expect:
+  exit: ok
+  stdout: { empty: true }
+exchanges:
+  order: sequence
+  items:
+    - route: webhook_inbound.delete_version
+      vars: { id: 2a4b6c8d-0000-4000-8000-000000000001, semver: "1.0.0" }
+      request: { json: { confirm: dev@conformance.invalid } }
+      response: { status: 200, json: { semver: "1.0.0", effect: hard } }

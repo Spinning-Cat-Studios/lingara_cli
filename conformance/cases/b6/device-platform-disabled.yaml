@@ -1,0 +1,20 @@
+id: b6.device-platform-disabled
+title: A device poll answered with B4's lingara_code is platform_disabled, even after it was pending
+behaviours: [B6, B4]
+command: login
+argv: [login, --device]
+credentials: none
+expect:
+  exit: platform_disabled
+  stdout: { empty: true }
+  stderr: { message: platform_disabled }
+  stored_credentials: absent
+exchanges:
+  order: sequence
+  items:
+    - route: oauth.device_authorization
+      response: { status: 200, json: { device_code: dc1, user_code: ABCD-EFGH, verification_uri: "{base_url}/device", interval: 1 } }
+    - route: oauth.token
+      response: { status: 400, json: { error: authorization_pending } }
+    - route: oauth.token
+      response: { status: 400, json: { error: access_denied, error_description: words that change nothing, lingara_code: "{platform_access_code}" } }

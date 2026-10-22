@@ -1,0 +1,35 @@
+id: b7.apply-refuses-custom-node
+title: A node that runs a script refuses apply by its handle, before the dry-run and with zero writes
+behaviours: [B7]
+command: canvas apply
+argv: [canvas, apply, 9f8e7d6c-0000-4000-8000-000000000001]
+credentials: stored
+expect:
+  exit: refused
+  stdout: { empty: true }
+  stderr: { contains: [node n3 runs a script; apply this canvas in the browser] }
+exchanges:
+  order: sequence
+  items:
+    - route: canvas.get
+      vars: { id: 9f8e7d6c-0000-4000-8000-000000000001 }
+      response:
+        status: 200
+        json:
+          id: 9f8e7d6c-0000-4000-8000-000000000001
+          active: null
+          draft:
+            draft_version: 1
+            objects: {}
+            definition:
+              schema: 2
+              nodes:
+                - { id: n1, kind: client, position: [0, 0], fields: { name: My server, scopes: [] }, script: null, custom: false, script_name: null, params: {} }
+                - { id: n3, kind: webhook, position: [0, 0], fields: {}, script: "return lingara.webhook({ client: input.client, url: 'https://x.example', events: [] })", custom: true, script_name: null, params: {} }
+              edges: [ { from: n1, to: n3 } ]
+    - route: oauth_client.list
+      response: { status: 200, json: { items: [], next_cursor: null } }
+    - route: webhook_outbound.list
+      response: { status: 200, json: { items: [], next_cursor: null } }
+    - route: app.list
+      response: { status: 200, json: { items: [], next_cursor: null } }

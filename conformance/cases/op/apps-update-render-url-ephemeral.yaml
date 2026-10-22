@@ -1,0 +1,10 @@
+id: op.apps-update-render-url-ephemeral
+title: apps update <id> --manifest refuses a quick-tunnel render_url with render_url_ephemeral and sends nothing (16.10.26ad D2, 16.10.26ae D10 row 15)
+behaviours: [B2]
+command: apps update
+argv: [apps, update, 7d1e2f30-0000-4000-8000-000000000001, --manifest, "{fixtures}/manifests/ephemeral.json"]
+credentials: stored
+expect:
+  exit: render_url_ephemeral
+  stdout: { empty: true }
+  stderr: { message: render_url_ephemeral }

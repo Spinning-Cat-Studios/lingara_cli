@@ -1,0 +1,12 @@
+# 16.10.26ae AC15 — status_shows_live_parked_and_serving
+id: apps.status-serving-text
+title: apps status says the owner's install renders the serving version when no dev render_url is set
+behaviours: [B1]
+command: apps status
+argv: [apps, status]
+credentials: stored
+project: dev-basic
+mock: platform_dev
+expect:
+  exit: ok
+  stdout: { contains: ["dev: serving version"] }

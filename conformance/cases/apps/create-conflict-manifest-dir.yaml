@@ -1,0 +1,10 @@
+# 16.10.26ae AC19 — conflicting_forms_exit_usage
+id: apps.create-conflict-manifest-dir
+title: apps create refuses --manifest with --dir, two forms of one verb, as usage before any request
+behaviours: [B2]
+command: apps create
+argv: [apps, create, demo, --client, 0b9c4f0e-0000-4000-8000-000000000001, --manifest, "{fixtures}/manifests/flashcards.json", --dir, elsewhere]
+credentials: stored
+expect:
+  exit: usage
+  stdout: { empty: true }

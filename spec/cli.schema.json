@@ -1,0 +1,333 @@
+{
+  "schema": 1,
+  "binary": "lingara",
+  "exit_codes": [
+    { "code": 0, "name": "ok", "summary": "Done." },
+    { "code": 1, "name": "failure", "summary": "Anything not below: a bug, or a response the CLI did not expect." },
+    { "code": 2, "name": "usage", "summary": "An unknown command or flag, a missing argument, a bad value, or flags that cannot be combined." },
+    { "code": 3, "name": "auth_required", "summary": "No stored credentials, a refresh the server refused, or a 401 after one refresh. Run `lingara login`." },
+    { "code": 4, "name": "not_found", "summary": "The object does not exist, or is not yours." },
+    { "code": 5, "name": "refused", "summary": "The server refused the request and said why (400, 403, 409 or 422), including a missing scope." },
+    { "code": 6, "name": "not_confirmed", "summary": "A dangerous command was not confirmed: declined at y/n, a typed email that did not match, or a non-interactive call without `-y --confirm <email>`." },
+    { "code": 7, "name": "unavailable", "summary": "A network failure, a 5xx, maintenance, or a 429 after the CLI's retries." },
+    { "code": 8, "name": "platform_disabled", "summary": "The developer platform is not enabled for this account yet.", "message": "platform_disabled" },
+    { "code": 9, "name": "tool_missing", "summary": "`apps dev` needs cloudflared, and it is not installed or is too old.", "message": "tool_missing_cloudflared" },
+    { "code": 10, "name": "tunnel_failed", "summary": "The tunnel never reported a URL or answered within 30 s, or died a sixth time.", "message": "tunnel_failed" },
+    { "code": 11, "name": "dev_session_held", "summary": "Another `apps dev` session holds this app's dev version.", "message": "dev_session_held" },
+    { "code": 12, "name": "dev_session_lost", "summary": "The dev session was taken over or expired while it ran.", "message": "dev_session_lost" },
+    { "code": 13, "name": "app_exited", "summary": "The app process exited with a non-zero status.", "message": "app_exited" },
+    { "code": 14, "name": "connection_scripted", "summary": "`lingara/connection.js` holds a statement with a script, which only the builder can apply.", "message": "connection_scripted" },
+    { "code": 15, "name": "render_url_ephemeral", "summary": "A version's renderUrl is a quick-tunnel or dev.invalid address.", "message": "render_url_ephemeral" },
+    { "code": 16, "name": "platform_toml_secret", "summary": "`platform.toml` holds a value or key that looks like a secret.", "message": "platform_toml_secret" },
+    { "code": 17, "name": "platform_toml_schema", "summary": "`platform.toml` has an unknown schema, or does not match the file's JSON Schema.", "message": "platform_toml_schema" },
+    { "code": 18, "name": "app_not_listening", "summary": "The app did not accept a connection on its port within 60 s.", "message": "app_not_listening" },
+    { "code": 130, "name": "interrupted", "summary": "Interrupted (Ctrl-C)." }
+  ],
+  "global_flags": [
+    { "name": "json", "type": "bool", "summary": "Machine-readable output on stdout" },
+    { "name": "profile", "type": "string", "value_name": "name", "env": "LINGARA_PROFILE", "summary": "The stored credentials to use" }
+  ],
+  "flag_groups": {
+    "confirm": [
+      { "name": "yes", "short": "y", "type": "bool", "summary": "Answer the y/n question; needs --confirm too" },
+      { "name": "confirm", "type": "string", "value_name": "email", "summary": "Your developer email, typed back; needs -y too" }
+    ]
+  },
+  "commands": [
+    { "name": "login", "summary": "Sign in through the browser, or with a device code.",
+      "flags": [ { "name": "device", "type": "bool", "summary": "Sign in with a code shown here, for a machine with no browser" } ],
+      "messages": ["login_browser_wait", "login_device_code", "login_signed_in", "login_ci_not_needed", "store_file_only"],
+      "exit_codes": ["auth_required", "refused", "platform_disabled"],
+      "examples": [ { "argv": "lingara login --device", "summary": "Sign in on a machine with no browser" } ] },
+    { "name": "logout", "summary": "Revoke and forget the stored credentials.", "messages": ["login_ci_not_needed"], "exit_codes": ["auth_required"] },
+    { "name": "whoami", "summary": "Show the developer the credentials belong to.", "exit_codes": ["auth_required", "refused", "platform_disabled"] }
+  ],
+  "topics": [
+    { "name": "apps", "summary": "Apps that render cards inside Lingara.",
+      "commands": [
+        { "name": "create", "summary": "Scaffold an app project and register it; or, with --client and --manifest, register an app from a manifest file.",
+          "args": [ { "name": "name", "type": "string", "required": true } ],
+          "flags": [
+            { "name": "client", "type": "string", "value_name": "id", "summary": "The OAuth client's id (with --manifest)" },
+            { "name": "manifest", "type": "path", "value_name": "path", "summary": "The app's manifest file (with --client)" },
+            { "name": "lang", "type": "enum", "values": ["typescript", "rust", "go", "java", "kotlin", "ruby", "php"], "default": "typescript", "value_name": "app-kit-lang", "summary": "The app's language" },
+            { "name": "bare", "type": "bool", "summary": "The manifest as code in the app's language, and a handler on the kit's primitives" },
+            { "name": "dir", "type": "path", "value_name": "path", "summary": "Where to write the project; default ./<name>" },
+            { "name": "no-register", "type": "bool", "summary": "Scaffold only; register later with apps update" },
+            { "name": "description", "type": "string", "value_name": "text", "summary": "One sentence about the app" },
+            { "name": "port", "type": "int", "value_name": "n", "summary": "The port the app listens on; default 8787" },
+            { "name": "slot", "type": "enum", "values": ["home.side", "plans.empty_detail"], "repeatable": true, "value_name": "slot", "summary": "Where the app's card may appear; default home.side" },
+            { "name": "context", "type": "string", "repeatable": true, "value_name": "slice", "summary": "A context slice the app receives" },
+            { "name": "config", "type": "path", "value_name": "path", "summary": "The platform.toml to read; default the nearest at or above this directory" }
+          ],
+          "conflicts": [["manifest", "lang"], ["manifest", "bare"], ["manifest", "dir"], ["manifest", "no-register"],
+                        ["manifest", "description"], ["manifest", "port"], ["manifest", "slot"], ["manifest", "context"],
+                        ["client", "lang"], ["client", "bare"], ["client", "dir"]],
+          "messages": ["apps_create_login_hint", "app_name_invalid", "dir_not_empty", "manifest_warning", "platform_toml_tracked"],
+          "exit_codes": ["auth_required", "not_found", "refused", "platform_disabled", "platform_toml_secret", "platform_toml_schema"],
+          "examples": [ { "argv": "lingara apps create luba --lang typescript", "summary": "Scaffold a TypeScript app and register it, private" } ] },
+        { "name": "list", "summary": "List your apps, or the apps platform.toml pins.", "output": { "columns": ["ID", "NAME", "CLIENT", "SERVING", "VISIBILITY"] },
+          "flags": [
+            { "name": "pinned", "type": "bool", "summary": "List platform.toml's rows instead, reading nothing from the platform" },
+            { "name": "config", "type": "path", "value_name": "path", "summary": "The platform.toml to read; default the nearest at or above this directory" }
+          ],
+          "messages": ["platform_toml_tracked"],
+          "exit_codes": ["auth_required", "refused", "platform_disabled", "platform_toml_secret", "platform_toml_schema"] },
+        { "name": "get", "summary": "Show one app.", "args": [ { "name": "id", "type": "string", "required": true } ],
+          "exit_codes": ["auth_required", "not_found", "refused", "platform_disabled"] },
+        { "name": "update", "summary": "Without --manifest, push the project's manifest to its dev version (--version cuts a draft); with an id and --manifest, make a new version from a file.",
+          "args": [ { "name": "id", "type": "string" } ],
+          "flags": [
+            { "name": "manifest", "type": "path", "value_name": "path", "summary": "The app's manifest file: makes a new version" },
+            { "name": "version", "type": "string", "value_name": "semver", "summary": "Cut a draft version from the project's manifest" },
+            { "name": "config", "type": "path", "value_name": "path", "summary": "The platform.toml to read; default the nearest at or above this directory" }
+          ],
+          "conflicts": [["manifest", "version"]],
+          "messages": ["app_row_ambiguous", "app_row_unknown", "manifest_warning", "platform_toml_tracked"],
+          "exit_codes": ["auth_required", "not_found", "refused", "platform_disabled", "connection_scripted", "render_url_ephemeral", "platform_toml_secret", "platform_toml_schema"] },
+        { "name": "dev", "summary": "Run the app behind a tunnel and point your private dev version at it, until Ctrl+C.",
+          "args": [ { "name": "name", "type": "string" } ],
+          "flags": [
+            { "name": "port", "type": "int", "value_name": "n", "summary": "The port the app listens on; default the row's" },
+            { "name": "tunnel", "type": "enum", "values": ["cloudflared", "none"], "default": "cloudflared", "summary": "The tunnel to open; none needs --render-url" },
+            { "name": "render-url", "type": "string", "value_name": "https-url", "summary": "With --tunnel none, the URL the dev version renders from" },
+            { "name": "take-over", "type": "bool", "summary": "End another terminal's session on this app first" },
+            { "name": "write-env", "type": "path", "value_name": "file", "summary": "Also write the session's variables to this gitignored file, mode 0600" },
+            { "name": "show-env", "type": "bool", "summary": "List the names of the variables the app receives" },
+            { "name": "reset", "type": "bool", "summary": "Return your install to the serving version, and do nothing else" },
+            { "name": "config", "type": "path", "value_name": "path", "summary": "The platform.toml to read; default the nearest at or above this directory" }
+          ],
+          "conflicts": [["reset", "port"], ["reset", "tunnel"], ["reset", "render-url"], ["reset", "take-over"], ["reset", "write-env"], ["reset", "show-env"]],
+          "messages": ["apps_dev_ready", "apps_dev_env_written", "apps_dev_reset", "apps_dev_reset_held", "app_row_ambiguous", "app_row_unknown", "path_not_ignored", "platform_toml_tracked", "tool_missing_php_ext", "apps_dev_unsupported_platform"],
+          "exit_codes": ["auth_required", "not_found", "refused", "platform_disabled", "tool_missing", "tunnel_failed", "dev_session_held", "dev_session_lost", "app_exited", "platform_toml_secret", "platform_toml_schema", "app_not_listening"],
+          "examples": [ { "argv": "lingara apps dev luba", "summary": "Serve luba from this machine to your own install" } ] },
+        { "name": "status", "summary": "Show where the app's dev version renders from: live, parked, or the serving version.",
+          "args": [ { "name": "name", "type": "string" } ],
+          "flags": [ { "name": "config", "type": "path", "value_name": "path", "summary": "The platform.toml to read; default the nearest at or above this directory" } ],
+          "messages": ["app_row_ambiguous", "app_row_unknown", "platform_toml_tracked"],
+          "exit_codes": ["auth_required", "not_found", "refused", "platform_disabled", "platform_toml_secret", "platform_toml_schema"] },
+        { "name": "pin", "summary": "Add an app to platform.toml (and its example), by id or by name.",
+          "args": [ { "name": "app", "type": "string", "required": true } ],
+          "flags": [
+            { "name": "path", "type": "path", "value_name": "dir", "summary": "The project directory; needed for a name" },
+            { "name": "config", "type": "path", "value_name": "path", "summary": "The platform.toml to read; default the nearest at or above this directory" }
+          ],
+          "messages": ["app_name_invalid", "platform_toml_tracked"],
+          "exit_codes": ["auth_required", "not_found", "refused", "platform_disabled", "platform_toml_secret", "platform_toml_schema"] },
+        { "name": "unpin", "summary": "Remove an app's row from platform.toml; the example changes by review.",
+          "args": [ { "name": "name", "type": "string", "required": true } ],
+          "flags": [ { "name": "config", "type": "path", "value_name": "path", "summary": "The platform.toml to read; default the nearest at or above this directory" } ],
+          "messages": ["app_row_unknown", "platform_toml_tracked"],
+          "exit_codes": ["platform_toml_secret", "platform_toml_schema"] },
+        { "name": "delete", "summary": "Delete an app, or one of its versions.", "dangerous": true,
+          "args": [ { "name": "id", "type": "string", "required": true } ],
+          "flags": [ { "name": "version", "type": "string", "value_name": "semver", "summary": "Delete only this version" } ],
+          "flag_groups": ["confirm"],
+          "messages": ["consequence_app", "consequence_version", "confirm_pinned_by"],
+          "exit_codes": ["auth_required", "not_found", "refused", "not_confirmed", "platform_disabled"] },
+        { "name": "submit", "summary": "Submit a version of an app for review, to make it public.",
+          "args": [ { "name": "id", "type": "string", "required": true } ],
+          "flags": [ { "name": "version", "type": "string", "required": true, "value_name": "semver", "summary": "The version to submit" } ],
+          "exit_codes": ["auth_required", "not_found", "refused", "platform_disabled"] }
+      ],
+      "topics": [
+        { "name": "versions", "summary": "An app's versions.",
+          "commands": [
+            { "name": "list", "summary": "List an app's versions.",
+              "args": [ { "name": "id", "type": "string", "required": true } ],
+              "output": { "columns": ["SEMVER", "STATE", "STATE_AT", "REVIEWED"] },
+              "exit_codes": ["auth_required", "not_found", "refused", "platform_disabled"] },
+            { "name": "publish", "summary": "Publish an approved version, or a private app's draft.",
+              "args": [ { "name": "id", "type": "string", "required": true }, { "name": "semver", "type": "string", "required": true } ],
+              "exit_codes": ["auth_required", "not_found", "refused", "platform_disabled"] },
+            { "name": "withdraw", "summary": "Withdraw a version.",
+              "args": [ { "name": "id", "type": "string", "required": true }, { "name": "semver", "type": "string", "required": true } ],
+              "exit_codes": ["auth_required", "not_found", "refused", "platform_disabled"] }
+          ] }
+      ] },
+    { "name": "embed", "summary": "Lingara inside your game or website: an embed and the metered OAuth client behind it.",
+      "commands": [
+        { "name": "create", "summary": "Create an embed and its metered OAuth client, and show the client's secret once.",
+          "flags": [
+            { "name": "name", "type": "string", "required": true, "summary": "The embed's name" },
+            { "name": "origin", "type": "string", "repeatable": true, "value_name": "origin", "summary": "A web origin allowed to use it (up to 10)" },
+            { "name": "scope", "type": "string", "repeatable": true, "value_name": "scope", "summary": "A scope beside embed:mint" }
+          ],
+          "exit_codes": ["auth_required", "refused", "platform_disabled"] },
+        { "name": "list", "summary": "List your embeds.", "output": { "columns": ["ID", "NAME", "CLIENT", "ORIGINS", "SERVING"] },
+          "exit_codes": ["auth_required", "refused", "platform_disabled"] },
+        { "name": "get", "summary": "Show one embed.", "args": [ { "name": "id", "type": "string", "required": true } ],
+          "exit_codes": ["auth_required", "not_found", "refused", "platform_disabled"] },
+        { "name": "update", "summary": "Rename an embed, or replace its origins.",
+          "args": [ { "name": "id", "type": "string", "required": true } ],
+          "flags": [
+            { "name": "name", "type": "string", "summary": "The new name" },
+            { "name": "origin", "type": "string", "repeatable": true, "value_name": "origin", "summary": "Replaces the allowed origins" }
+          ],
+          "exit_codes": ["auth_required", "not_found", "refused", "platform_disabled"] },
+        { "name": "delete", "summary": "Delete an embed and its OAuth client, or one version.", "dangerous": true,
+          "args": [ { "name": "id", "type": "string", "required": true } ],
+          "flags": [ { "name": "version", "type": "string", "value_name": "semver", "summary": "Delete only this version" } ],
+          "flag_groups": ["confirm"],
+          "messages": ["consequence_embed", "consequence_version", "confirm_pinned_by"],
+          "exit_codes": ["auth_required", "not_found", "refused", "not_confirmed", "platform_disabled"] }
+      ] },
+    { "name": "oauth_client", "aliases": ["client"], "summary": "OAuth clients: the credentials your servers, apps and CI use.",
+      "commands": [
+        { "name": "create", "summary": "Create an OAuth client; a confidential one's secret is shown once.",
+          "flags": [
+            { "name": "name", "type": "string", "required": true, "summary": "The client's name" },
+            { "name": "scope", "type": "string", "repeatable": true, "value_name": "scope", "summary": "A scope the client may ask for" },
+            { "name": "type", "type": "enum", "values": ["confidential", "public"], "default": "confidential", "summary": "Whether the client keeps a secret" },
+            { "name": "billing-mode", "type": "enum", "values": ["allowance", "metered"], "default": "allowance", "value_name": "mode", "summary": "How its usage is billed" },
+            { "name": "redirect-uri", "type": "string", "repeatable": true, "value_name": "uri", "summary": "A redirect URI it may use" },
+            { "name": "ci", "type": "bool", "summary": "A CI client: confidential, holding the four platform and canvas scopes" }
+          ],
+          "conflicts": [["ci", "type"], ["ci", "scope"]],
+          "exit_codes": ["auth_required", "refused", "platform_disabled"],
+          "examples": [ { "argv": "lingara client create --name 'Release pipeline' --ci", "summary": "A client for CI to sign in with" } ] },
+        { "name": "list", "summary": "List your OAuth clients.", "output": { "columns": ["ID", "NAME", "TYPE", "SCOPES", "CREATED"] },
+          "exit_codes": ["auth_required", "refused", "platform_disabled"] },
+        { "name": "get", "summary": "Show one OAuth client.", "args": [ { "name": "id", "type": "string", "required": true } ],
+          "exit_codes": ["auth_required", "not_found", "refused", "platform_disabled"] },
+        { "name": "update", "summary": "Rename an OAuth client, or replace its scopes, API version or redirect URIs.",
+          "args": [ { "name": "id", "type": "string", "required": true } ],
+          "flags": [
+            { "name": "name", "type": "string", "summary": "The new name" },
+            { "name": "scope", "type": "string", "repeatable": true, "value_name": "scope", "summary": "Replaces the scopes" },
+            { "name": "api-version", "type": "string", "value_name": "version", "summary": "The API version it is pinned to" },
+            { "name": "redirect-uri", "type": "string", "repeatable": true, "value_name": "uri", "summary": "Replaces the redirect URIs" }
+          ],
+          "exit_codes": ["auth_required", "not_found", "refused", "platform_disabled"] },
+        { "name": "delete", "summary": "Delete an OAuth client and everything under it, or one version.", "dangerous": true,
+          "args": [ { "name": "id", "type": "string", "required": true } ],
+          "flags": [ { "name": "version", "type": "string", "value_name": "semver", "summary": "Delete only this version" } ],
+          "flag_groups": ["confirm"],
+          "messages": ["consequence_oauth_client", "consequence_version", "confirm_pinned_by"],
+          "exit_codes": ["not_found", "not_confirmed", "refused", "auth_required", "platform_disabled"],
+          "examples": [ { "argv": "lingara client delete oc_123 -y --confirm dev@example.com", "summary": "Delete from CI" } ] }
+      ],
+      "topics": [
+        { "name": "secret", "summary": "A client's secrets. Rotate by creating the new one, deploying it, then deleting the old one.",
+          "commands": [
+            { "name": "create", "summary": "Mint a new secret, shown once. The old one stays live.",
+              "args": [ { "name": "client_id", "type": "string", "required": true } ],
+              "exit_codes": ["auth_required", "not_found", "refused", "platform_disabled"],
+              "examples": [ { "argv": "lingara client secret create oc_123", "summary": "Start a rotation" } ] },
+            { "name": "delete", "summary": "Revoke a secret.", "dangerous": true,
+              "args": [ { "name": "client_id", "type": "string", "required": true }, { "name": "secret_id", "type": "string", "required": true } ],
+              "flag_groups": ["confirm"],
+              "messages": ["consequence_secret"],
+              "exit_codes": ["auth_required", "not_found", "refused", "not_confirmed", "platform_disabled"] }
+          ] }
+      ] },
+    { "name": "webhook", "summary": "Webhooks: events your game sends in, and events Lingara sends out.",
+      "topics": [
+        { "name": "inbound", "summary": "Inbound webhooks: a confidential client a sender uses for POST /v1/events.",
+          "commands": [
+            { "name": "create", "summary": "Create an inbound webhook and its client, and show the client's secret once.",
+              "flags": [
+                { "name": "name", "type": "string", "required": true, "summary": "The webhook's name" },
+                { "name": "event", "type": "string", "repeatable": true, "value_name": "type", "summary": "An inbound event type it accepts; absent, every one" }
+              ],
+              "exit_codes": ["auth_required", "refused", "platform_disabled"],
+              "examples": [ { "argv": "lingara webhook inbound create --name 'Game server' --event world.practice_completed", "summary": "Accept one event type" } ] },
+            { "name": "list", "summary": "List your inbound webhooks.", "output": { "columns": ["ID", "NAME", "CLIENT", "EVENTS"] },
+              "exit_codes": ["auth_required", "refused", "platform_disabled"] },
+            { "name": "get", "summary": "Show one inbound webhook.", "args": [ { "name": "id", "type": "string", "required": true } ],
+              "exit_codes": ["auth_required", "not_found", "refused", "platform_disabled"] },
+            { "name": "update", "summary": "Rename an inbound webhook, or replace its event types.",
+              "args": [ { "name": "id", "type": "string", "required": true } ],
+              "flags": [
+                { "name": "name", "type": "string", "summary": "The new name" },
+                { "name": "event", "type": "string", "repeatable": true, "value_name": "type", "summary": "Replaces the event types" }
+              ],
+              "exit_codes": ["auth_required", "not_found", "refused", "platform_disabled"] },
+            { "name": "delete", "summary": "Delete an inbound webhook, or one version. Its client stays.", "dangerous": true,
+              "args": [ { "name": "id", "type": "string", "required": true } ],
+              "flags": [ { "name": "version", "type": "string", "value_name": "semver", "summary": "Delete only this version" } ],
+              "flag_groups": ["confirm"],
+              "messages": ["consequence_webhook_inbound", "consequence_version", "confirm_pinned_by"],
+              "exit_codes": ["auth_required", "not_found", "refused", "not_confirmed", "platform_disabled"] }
+          ] },
+        { "name": "outbound", "summary": "Outbound webhooks: events Lingara delivers to your endpoint, signed.",
+          "commands": [
+            { "name": "create", "summary": "Create an outbound webhook, and show its signing secret once.",
+              "flags": [
+                { "name": "client", "type": "string", "required": true, "value_name": "id", "summary": "The OAuth client it belongs to" },
+                { "name": "url", "type": "string", "required": true, "value_name": "url", "summary": "The endpoint deliveries go to" },
+                { "name": "event", "type": "string", "required": true, "repeatable": true, "value_name": "type", "summary": "An event type to deliver" }
+              ],
+              "exit_codes": ["auth_required", "not_found", "refused", "platform_disabled"] },
+            { "name": "list", "summary": "List your outbound webhooks.", "output": { "columns": ["ID", "CLIENT", "URL", "EVENTS", "ENABLED"] },
+              "exit_codes": ["auth_required", "refused", "platform_disabled"] },
+            { "name": "get", "summary": "Show one outbound webhook.", "args": [ { "name": "id", "type": "string", "required": true } ],
+              "exit_codes": ["auth_required", "not_found", "refused", "platform_disabled"] },
+            { "name": "update", "summary": "Change an outbound webhook's URL or event types, keeping its signing secret, or enable or disable it.",
+              "args": [ { "name": "id", "type": "string", "required": true } ],
+              "flags": [
+                { "name": "url", "type": "string", "value_name": "url", "summary": "The new endpoint" },
+                { "name": "event", "type": "string", "repeatable": true, "value_name": "type", "summary": "Replaces the event types" },
+                { "name": "enable", "type": "bool", "summary": "Resume deliveries" },
+                { "name": "disable", "type": "bool", "summary": "Pause deliveries" }
+              ],
+              "conflicts": [["enable", "disable"]],
+              "exit_codes": ["auth_required", "not_found", "refused", "platform_disabled"] },
+            { "name": "replace", "summary": "Start again: a new endpoint with a new signing secret, then the old one deleted.", "dangerous": true,
+              "args": [ { "name": "id", "type": "string", "required": true } ],
+              "flags": [
+                { "name": "url", "type": "string", "value_name": "url", "summary": "The new endpoint; absent, the old one's" },
+                { "name": "event", "type": "string", "repeatable": true, "value_name": "type", "summary": "The new event types; absent, the old one's" }
+              ],
+              "flag_groups": ["confirm"],
+              "messages": ["consequence_replace", "confirm_pinned_by"],
+              "exit_codes": ["auth_required", "not_found", "refused", "not_confirmed", "platform_disabled"] },
+            { "name": "test", "summary": "Send a test delivery.", "args": [ { "name": "id", "type": "string", "required": true } ],
+              "exit_codes": ["auth_required", "not_found", "refused", "platform_disabled"] },
+            { "name": "delete", "summary": "Delete an outbound webhook, or one version.", "dangerous": true,
+              "args": [ { "name": "id", "type": "string", "required": true } ],
+              "flags": [ { "name": "version", "type": "string", "value_name": "semver", "summary": "Delete only this version" } ],
+              "flag_groups": ["confirm"],
+              "messages": ["consequence_webhook_outbound", "consequence_version", "confirm_pinned_by"],
+              "exit_codes": ["auth_required", "not_found", "refused", "not_confirmed", "platform_disabled"] }
+          ] }
+      ] },
+    { "name": "canvas", "summary": "Canvases: builder flows that create their objects only when applied.",
+      "commands": [
+        { "name": "create", "summary": "Create a canvas, from a definition file or empty.",
+          "flags": [
+            { "name": "name", "type": "string", "summary": "The canvas's name" },
+            { "name": "file", "type": "path", "value_name": "definition.json", "summary": "The definition; absent, an empty one" }
+          ],
+          "exit_codes": ["auth_required", "not_found", "refused", "platform_disabled"] },
+        { "name": "list", "summary": "List your canvases.", "output": { "columns": ["ID", "NAME", "DRAFT", "ACTIVE", "UPDATED"] },
+          "exit_codes": ["auth_required", "not_found", "refused", "platform_disabled"] },
+        { "name": "get", "summary": "Show one canvas.", "args": [ { "name": "id", "type": "string", "required": true } ],
+          "exit_codes": ["auth_required", "not_found", "refused", "platform_disabled"] },
+        { "name": "update", "summary": "Rename a canvas.",
+          "args": [ { "name": "id", "type": "string", "required": true } ],
+          "flags": [ { "name": "name", "type": "string", "required": true, "summary": "The new name" } ],
+          "exit_codes": ["auth_required", "not_found", "refused", "platform_disabled"] },
+        { "name": "draft", "summary": "Save a definition as the canvas's draft. Creates nothing else.",
+          "args": [ { "name": "id", "type": "string", "required": true } ],
+          "flags": [ { "name": "file", "type": "path", "required": true, "value_name": "definition.json", "summary": "The definition" } ],
+          "exit_codes": ["auth_required", "not_found", "refused", "platform_disabled"] },
+        { "name": "apply", "summary": "Create the canvas's objects by running this CLI's own commands, then activate it.",
+          "args": [ { "name": "id", "type": "string", "required": true } ],
+          "flags": [
+            { "name": "dry-run", "type": "bool", "summary": "Print what each object would do, and write nothing" },
+            { "name": "print-commands", "type": "bool", "summary": "Print the commands apply would run, and write nothing" }
+          ],
+          "conflicts": [["dry-run", "print-commands"]],
+          "messages": ["canvas_apply_partial"],
+          "exit_codes": ["auth_required", "not_found", "refused", "platform_disabled", "render_url_ephemeral"],
+          "examples": [ { "argv": "lingara canvas apply cv_123 --print-commands", "summary": "See exactly what apply would run" } ] },
+        { "name": "delete", "summary": "Delete a canvas, or one version. The objects it made stay.", "dangerous": true,
+          "args": [ { "name": "id", "type": "string", "required": true } ],
+          "flags": [ { "name": "version", "type": "string", "value_name": "semver", "summary": "Delete only this version" } ],
+          "flag_groups": ["confirm"],
+          "messages": ["consequence_canvas", "consequence_version", "confirm_pinned_by"],
+          "exit_codes": ["auth_required", "not_found", "refused", "not_confirmed", "platform_disabled"] }
+      ] }
+  ]
+}

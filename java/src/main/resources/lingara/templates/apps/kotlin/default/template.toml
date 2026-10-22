@@ -1,0 +1,2 @@
+start = "gradle --quiet run"
+manifest = "lingara/connection.js"

@@ -1,0 +1,15 @@
+id: op.whoami-developer-not-found
+title: developer.me answering developer_not_found is refused, not not_found, with the portal's line
+behaviours: [B2]
+command: whoami
+argv: [whoami]
+credentials: stored
+expect:
+  exit: refused
+  stdout: { empty: true }
+  stderr: { contains: ["(developer_not_found)", "create your developer account at https://platform.getlingara.com"] }
+exchanges:
+  order: sequence
+  items:
+    - route: developer.me
+      response: { status: 404, json: { code: developer_not_found, error: You have no developer account yet. } }

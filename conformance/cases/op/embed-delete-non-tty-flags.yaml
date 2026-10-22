@@ -1,0 +1,17 @@
+id: op.embed-delete-non-tty-flags
+title: With -y and a matching --confirm, the embed delete is the only request and carries the canonical email
+behaviours: [B3]
+command: embed delete
+confirm: non_tty_flags
+argv: [embed, delete, 5e3a0c11-0000-4000-8000-000000000001, -y, --confirm, dev@conformance.invalid]
+credentials: stored
+expect:
+  exit: ok
+  stdout: { empty: true }
+exchanges:
+  order: sequence
+  items:
+    - route: embed.delete
+      vars: { id: 5e3a0c11-0000-4000-8000-000000000001 }
+      request: { json: { confirm: dev@conformance.invalid } }
+      response: { status: 200, json: { deleted: 2, pinned_by: 0 } }

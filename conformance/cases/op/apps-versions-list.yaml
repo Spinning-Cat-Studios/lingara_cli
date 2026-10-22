@@ -1,0 +1,32 @@
+id: op.apps-versions-list
+title: versions list follows next_cursor and prints SEMVER STATE STATE_AT REVIEWED
+behaviours: [B1]
+command: apps versions list
+argv: [apps, versions, list, 7d1e2f30-0000-4000-8000-000000000001]
+credentials: stored
+expect:
+  exit: ok
+  stdout:
+    table:
+      columns: [SEMVER, STATE, STATE_AT, REVIEWED]
+      rows:
+        - ["1.1.0", submitted, "2026-10-18T10:00:00Z", "-"]
+        - ["1.0.0", published, "2026-10-16T10:00:00Z", full]
+exchanges:
+  order: sequence
+  items:
+    - route: app.versions
+      vars: { id: 7d1e2f30-0000-4000-8000-000000000001 }
+      response:
+        status: 200
+        json:
+          items: [ { semver: "1.1.0", state: submitted, state_at: "2026-10-18T10:00:00Z", review_basis: null } ]
+          next_cursor: "1.1.0"
+    - route: app.versions
+      vars: { id: 7d1e2f30-0000-4000-8000-000000000001 }
+      request: { query: { cursor: "1.1.0" } }
+      response:
+        status: 200
+        json:
+          items: [ { semver: "1.0.0", state: published, state_at: "2026-10-16T10:00:00Z", review_basis: full } ]
+          next_cursor: null

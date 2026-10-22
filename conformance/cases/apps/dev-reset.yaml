@@ -1,0 +1,20 @@
+# 16.10.26ae AC21 — reset_returns_the_owner_to_serving
+id: apps.dev-reset
+title: apps dev --reset sends one PATCH clearing render_url at the read draft_version, and nothing else
+behaviours: [B5]
+command: apps dev
+argv: [apps, dev, --reset]
+credentials: stored
+project: dev-basic
+mock: platform_dev
+mock_seed: { render_url: "https://shy-owl-1.trycloudflare.com/" }
+expect:
+  exit: ok
+  stdout: { empty: true }
+  stderr: { message: apps_dev_reset, vars: { name: luba } }
+  calls:
+    - route: app_dev.get
+    - route: app_dev.patch
+      json: { render_url: null, draft_version: 1 }
+    - route: app_dev.session_open
+      count: { min: 0, max: 0 }

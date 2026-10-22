@@ -1,0 +1,6 @@
+# Installed from composer.lock by `make build-php`; never committed.
+/vendor/
+# Built by `make phar-php` (humbug/box) and attached to the GitHub Release (ADR 16.10.26af D6).
+/lingara.phar
+# The pinned box.phar `make phar-php` fetches.
+/.box/

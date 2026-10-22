@@ -1,0 +1,16 @@
+# spec/tools.toml — the external binaries `lingara apps dev` runs, and the
+# oldest version of each it accepts (ADR 16.10.26ae D8).
+#
+# cloudflared is found, never fetched: LINGARA_CLOUDFLARED, else `cloudflared`
+# on PATH. `cloudflared --version` prints `cloudflared version 2024.8.2 (built
+# …)`; a kit reads the first dotted version on that line and compares it
+# field by field with `min_version`. Below it, or absent, is exit
+# `tool_missing` with message `tool_missing_cloudflared`.
+#
+# The minimum is the first release whose metrics server answers
+# `GET /quicktunnel` with `{"hostname": …}`, which is how a kit learns the
+# quick tunnel's URL without parsing a log line. An older one would still
+# work through the stderr fallback, but a floor keeps every kit on one path.
+
+[cloudflared]
+min_version = "2023.4.1"

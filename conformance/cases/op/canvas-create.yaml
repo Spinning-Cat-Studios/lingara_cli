@@ -1,0 +1,18 @@
+id: op.canvas-create
+title: canvas create without --file sends an empty definition, and createCanvas's answer is printed with no further read
+behaviours: [B1]
+command: canvas create
+argv: [canvas, create, --name, My flow, --json]
+credentials: stored
+expect:
+  exit: ok
+  stdout:
+    json: { id: 9f8e7d6c-0000-4000-8000-000000000001, name: My flow, draft: { revision: 1, draft_version: 1, definition: { schema: 2, nodes: [], edges: [] }, objects: {} }, active: null }
+exchanges:
+  order: sequence
+  items:
+    - route: canvas.create
+      request: { json: { name: My flow, definition: { schema: 2, nodes: [], edges: [] } } }
+      response:
+        status: 201
+        json: { id: 9f8e7d6c-0000-4000-8000-000000000001, name: My flow, draft: { revision: 1, draft_version: 1, definition: { schema: 2, nodes: [], edges: [] }, objects: {} }, active: null }

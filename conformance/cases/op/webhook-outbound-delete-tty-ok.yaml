@@ -1,0 +1,27 @@
+id: op.webhook-outbound-delete-tty-ok
+title: In a terminal, the prompt says deliveries stop and the signing secret goes
+behaviours: [B3]
+command: webhook outbound delete
+confirm: tty_ok
+argv: [webhook, outbound, delete, 3c5d7e9f-0000-4000-8000-000000000001]
+tty: true
+credentials: stored
+interact:
+  - expect: { message: confirm_yes_no, vars: { kind: outbound webhook, name: https://hooks.example.com/lingara, id: 3c5d7e9f-0000-4000-8000-000000000001 } }
+  - expect: { message: consequence_webhook_outbound }
+    send: "y\n"
+  - expect: { message: confirm_type_email }
+    send: "dev@conformance.invalid\n"
+expect:
+  exit: ok
+  stdout: { empty: true }
+exchanges:
+  order: sequence
+  items:
+    - route: webhook_outbound.get
+      vars: { id: 3c5d7e9f-0000-4000-8000-000000000001 }
+      response: { status: 200, json: { id: 3c5d7e9f-0000-4000-8000-000000000001, kind: webhook_out, name: https://hooks.example.com/lingara } }
+    - route: webhook_outbound.delete
+      vars: { id: 3c5d7e9f-0000-4000-8000-000000000001 }
+      request: { json: { confirm: dev@conformance.invalid } }
+      response: { status: 204 }

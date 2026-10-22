@@ -1,0 +1,68 @@
+# One RuboCop pass over the kit (ADR 16.10.26af, Files to Change): standard's
+# style (its base config, at the Gemfile's pin), then the size and
+# complexity budgets the repository holds every kit to
+# (.code-health/thresholds.toml; the TypeScript kit's eslint.config.js
+# carries the same numbers), which standard turns off. RuboCop has no cop
+# for lines per file, methods per file or files per directory: those three
+# are scripts/budgets.sh's, run beside this in `make test-ruby`.
+inherit_gem:
+  standard: config/base.yml
+
+AllCops:
+  NewCops: disable
+  SuggestExtensions: false
+  TargetRubyVersion: 3.3
+  # Setting Exclude replaces RuboCop's defaults, vendor/** among them. The
+  # assets are committed copies of spec/ and templates/ (a template holds
+  # a Ruby app's own code), never this kit's.
+  Exclude:
+    - "vendor/**/*"
+    - "lib/lingara/cli/assets/**/*"
+
+# 50 lines per function.
+Metrics/MethodLength:
+  Enabled: true
+  Max: 50
+  CountAsOne: ["array", "hash", "heredoc", "method_call"]
+
+Metrics/BlockLength:
+  Enabled: true
+  Max: 50
+  Exclude:
+    - "test/**/*"
+
+# Complexity 10, the cyclomatic budget; perceived complexity alongside it.
+Metrics/CyclomaticComplexity:
+  Enabled: true
+  Max: 10
+
+Metrics/PerceivedComplexity:
+  Enabled: true
+  Max: 10
+
+# A method's size by assignments, branches and conditions: a guard against a
+# 50-line method that is all branches. 35 is RuboCop's default (17) doubled,
+# which every handler here fits without splitting a straight-line sequence.
+Metrics/AbcSize:
+  Enabled: true
+  Max: 35
+  # A test is a list of assertions; the budget guards source, as the
+  # TypeScript kit's ESLint config relaxes its per-function rule in tests.
+  Exclude:
+    - "test/**/*"
+
+# 5 parameters. Keyword options are Ruby's spelling of functional options,
+# so a keyword list is not a parameter list (the app SDK's rule).
+Metrics/ParameterLists:
+  Enabled: true
+  Max: 5
+  CountKeywordArgs: false
+
+# 300 lines per source file (a class or module is at most its file).
+Metrics/ClassLength:
+  Enabled: true
+  Max: 300
+
+Metrics/ModuleLength:
+  Enabled: true
+  Max: 300

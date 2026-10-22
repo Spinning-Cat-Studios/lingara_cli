@@ -1,0 +1,17 @@
+id: b4.route-platform-disabled
+title: A dark 404 carrying the platform_disabled code exits platform_disabled, never not_found
+behaviours: [B4]
+command: apps list
+argv: [apps, list]
+credentials: stored
+expect:
+  exit: platform_disabled
+  stdout: { empty: true }
+  stderr: { message: platform_disabled }
+exchanges:
+  order: sequence
+  items:
+    - route: app.list
+      response:
+        status: 404
+        json: { code: "{platform_disabled_code}", error: The developer platform is not enabled for this account. }

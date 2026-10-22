@@ -1,0 +1,17 @@
+id: op.webhook-outbound-delete-non-tty-flags
+title: With -y and a matching --confirm, the outbound webhook delete is the only request
+behaviours: [B3]
+command: webhook outbound delete
+confirm: non_tty_flags
+argv: [webhook, outbound, delete, 3c5d7e9f-0000-4000-8000-000000000001, -y, --confirm, dev@conformance.invalid]
+credentials: stored
+expect:
+  exit: ok
+  stdout: { empty: true }
+exchanges:
+  order: sequence
+  items:
+    - route: webhook_outbound.delete
+      vars: { id: 3c5d7e9f-0000-4000-8000-000000000001 }
+      request: { json: { confirm: dev@conformance.invalid } }
+      response: { status: 204 }

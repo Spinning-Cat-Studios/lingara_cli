@@ -1,0 +1,11 @@
+# 16.10.26ae AC22 — pins_are_local_and_the_config_is_selectable
+id: apps.pin-by-name
+title: apps pin <name> --path writes the row with no id, offline
+behaviours: [B1]
+command: apps pin
+argv: [apps, pin, bubbles, --path, sub]
+project: pin
+expect:
+  exit: ok
+  stdout: { empty: true }
+  files: { golden: apps-pin/by-name }

@@ -1,0 +1,14 @@
+# 16.10.26ae AC22 — pins_are_local_and_the_config_is_selectable
+id: apps.pin-api-precedence
+title: platform.toml's [platform] api never overrides LINGARA_API_URL, so the request reaches the mock rather than the file's host
+behaviours: [B5]
+command: apps status
+argv: [apps, status]
+credentials: stored
+project: api-precedence
+mock: platform_dev
+expect:
+  exit: ok
+  stdout: { contains: ["dev: serving version"] }
+  calls:
+    - route: app_dev.get

@@ -1,0 +1,75 @@
+id: b7.apply-partial-on-failure
+title: At the first failing op apply activates partial with what it recorded, prints every secret minted so far, and exits with that op's code
+behaviours: [B7]
+command: canvas apply
+argv: [canvas, apply, 9f8e7d6c-0000-4000-8000-000000000001]
+credentials: stored
+expect:
+  exit: unavailable
+  stdout: { contains: [lgr_cs_conformance_client, lgr_cs_conformance_signing] }
+  stderr: { message: canvas_apply_partial, vars: { done: "2", total: "3", id: 9f8e7d6c-0000-4000-8000-000000000001 } }
+exchanges:
+  order: sequence
+  items:
+    - route: canvas.get
+      vars: { id: 9f8e7d6c-0000-4000-8000-000000000001 }
+      response:
+        status: 200
+        json:
+          id: 9f8e7d6c-0000-4000-8000-000000000001
+          active: null
+          draft:
+            draft_version: 2
+            objects: {}
+            definition:
+              schema: 2
+              nodes:
+                - { id: n1, kind: client, position: [0, 0], fields: { name: My server, scopes: ["events:read"] }, script: null, custom: false, script_name: null, params: {} }
+                - { id: n2, kind: secret, position: [0, 0], fields: {}, script: null, custom: false, script_name: null, params: {} }
+                - { id: n3, kind: webhook, position: [0, 0], fields: { url: "https://hooks.example.com/lingara", events: [lesson_plan.ready] }, script: null, custom: false, script_name: null, params: {} }
+              edges: [ { from: n1, to: n2 }, { from: n1, to: n3 } ]
+    - route: oauth_client.list
+      response: { status: 200, json: { items: [], next_cursor: null } }
+    - route: webhook_outbound.list
+      response: { status: 200, json: { items: [], next_cursor: null } }
+    - route: app.list
+      response: { status: 200, json: { items: [], next_cursor: null } }
+    - route: canvas.dry_run
+      response:
+        status: 200
+        json:
+          ok: true
+          verdicts:
+            - { handle: n1, kind: client, op: create, verdict: would_create }
+            - { handle: n2, kind: secret, op: create, verdict: would_create, note: minted_with_client }
+            - { handle: n3, kind: webhook, op: create, verdict: would_create }
+    - route: oauth_client.create
+      response: { status: 201, json: { id: 0b9c4f0e-0000-4000-8000-000000000001, visibility: private, version: { semver: "1.0.0" } } }
+    - route: oauth_client.publish
+      vars: { id: 0b9c4f0e-0000-4000-8000-000000000001, semver: "1.0.0" }
+      response: { status: 200, json: { version: { semver: "1.0.0", state: published } } }
+    - route: oauth_client.secret_create
+      vars: { id: 0b9c4f0e-0000-4000-8000-000000000001 }
+      response: { status: 201, json: { secret_id: 4d4d4d4d-0000-4000-8000-000000000001, secret: lgr_cs_conformance_client } }
+    - route: oauth_client.get
+      vars: { id: 0b9c4f0e-0000-4000-8000-000000000001 }
+      response: { status: 200, json: { id: 0b9c4f0e-0000-4000-8000-000000000001, runtime_id: 1a1a1a1a-0000-4000-8000-000000000001 } }
+    - route: webhook_outbound.create
+      response: { status: 201, json: { id: 3c5d7e9f-0000-4000-8000-000000000003, visibility: private, version: { semver: "1.0.0" } } }
+    - route: webhook_outbound.publish
+      vars: { id: 3c5d7e9f-0000-4000-8000-000000000003, semver: "1.0.0" }
+      response: { status: 200, json: { version: { semver: "1.0.0", state: published } } }
+    - route: webhook_outbound.secret_create
+      vars: { id: 3c5d7e9f-0000-4000-8000-000000000003 }
+      response: { status: 201, json: { secret_id: 4d4d4d4d-0000-4000-8000-000000000003, secret: lgr_cs_conformance_signing } }
+    - route: webhook_outbound.get
+      vars: { id: 3c5d7e9f-0000-4000-8000-000000000003 }
+      response: { status: 500, json: { code: internal, error: Something broke. } }
+    - route: canvas.activate
+      vars: { id: 9f8e7d6c-0000-4000-8000-000000000001 }
+      request:
+        json:
+          draft_version: 2
+          outcome: partial
+          objects: { n1: { id: 1a1a1a1a-0000-4000-8000-000000000001 }, n2: { id: 4d4d4d4d-0000-4000-8000-000000000001 } }
+      response: { status: 200, json: { id: 9f8e7d6c-0000-4000-8000-000000000001 } }

@@ -1,0 +1,9 @@
+id: apps.dev-reset-conflict-port
+title: apps dev refuses --reset with --port, since --reset does one thing only, as usage before any request
+behaviours: [B2]
+command: apps dev
+argv: [apps, dev, --reset, --port, "9000"]
+credentials: stored
+expect:
+  exit: usage
+  stdout: { empty: true }

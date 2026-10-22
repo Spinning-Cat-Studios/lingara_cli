@@ -1,0 +1,9 @@
+id: op.webhook-outbound-update-enable-disable
+title: --enable with --disable is usage and sends nothing
+behaviours: [B2]
+command: webhook outbound update
+argv: [webhook, outbound, update, 3c5d7e9f-0000-4000-8000-000000000001, --enable, --disable]
+credentials: stored
+expect:
+  exit: usage
+  stdout: { empty: true }

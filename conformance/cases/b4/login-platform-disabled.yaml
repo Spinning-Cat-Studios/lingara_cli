@@ -1,0 +1,23 @@
+id: b4.login-platform-disabled
+title: A device login refused by the portal flag exits platform_disabled, not "declined"
+behaviours: [B4, B2]
+command: login
+argv: [login, --device]
+tty: false
+stdin: ""
+credentials: none
+expect:
+  exit: platform_disabled
+  stderr: { message: platform_disabled }
+  redacted: [lgr_at_conformance_device]
+  stored_credentials: absent
+exchanges:
+  order: sequence
+  items:
+    - route: oauth.device_authorization
+      request: { headers: { authorization: { absent: true } } }
+      response: { status: 200, json: { device_code: dc1, user_code: ABCD-EFGH, verification_uri: "{base_url}/device", interval: 1 } }
+    - route: oauth.token
+      min_gap_ms: 900
+      request: { headers: { authorization: { absent: true } } }
+      response: { status: 400, json: { error: access_denied, lingara_code: "{platform_access_code}" } }

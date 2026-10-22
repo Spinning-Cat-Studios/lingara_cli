@@ -1,0 +1,11 @@
+# 16.10.26ae AC22 — pins_are_local_and_the_config_is_selectable
+id: apps.pin-unpin
+title: apps unpin removes the row from platform.toml only; the checked-in example changes by review
+behaviours: [B1]
+command: apps unpin
+argv: [apps, unpin, luba]
+project: pin
+expect:
+  exit: ok
+  stdout: { empty: true }
+  files: { golden: apps-pin/unpinned }

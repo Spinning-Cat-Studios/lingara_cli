@@ -1,0 +1,19 @@
+id: b6.browser-wait
+title: Before the browser answers, login prints the authorize URL and the wait line, and a sign-in the portal declined is auth_required
+behaviours: [B6]
+command: login
+argv: [login]
+credentials: none
+interact:
+  - browser: follow_url
+expect:
+  exit: auth_required
+  stdout: { empty: true }
+  stderr: { message: login_browser_wait }
+  stored_credentials: absent
+exchanges:
+  order: sequence
+  items:
+    - route: oauth.authorize
+      request: { query: { response_type: code } }
+      response: { redirect: { to_query: redirect_uri, params: { error: access_denied, iss: "{base_url}" }, echo: [state] } }

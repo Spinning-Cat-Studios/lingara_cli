@@ -1,0 +1,10 @@
+# 16.10.26ae AC19 — conflicting_forms_exit_usage
+id: apps.create-manifest-without-client
+title: --manifest without --client is neither form of apps create, so it is usage before any request
+behaviours: [B2]
+command: apps create
+argv: [apps, create, demo, --manifest, "{fixtures}/manifests/flashcards.json"]
+credentials: stored
+expect:
+  exit: usage
+  stdout: { empty: true }

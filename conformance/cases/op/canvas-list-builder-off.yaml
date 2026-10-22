@@ -1,0 +1,15 @@
+id: op.canvas-list-builder-off
+title: A /v1/canvases 404 while the builder flag is off stays not_found, with a line saying the builder may be off
+behaviours: [B2]
+command: canvas list
+argv: [canvas, list]
+credentials: stored
+expect:
+  exit: not_found
+  stdout: { empty: true }
+  stderr: { contains: ["(not_found)", the canvas builder may not be enabled for this account] }
+exchanges:
+  order: sequence
+  items:
+    - route: canvas.list
+      response: { status: 404, json: { code: not_found, error: Not found. } }

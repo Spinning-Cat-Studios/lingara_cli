@@ -1,0 +1,11 @@
+id: b3.non-tty-yes-only
+title: In a pipe, -y without --confirm is not confirmation, and nothing is sent
+behaviours: [B3]
+command: oauth_client delete
+confirm: non_tty_refused
+argv: [client, delete, 0b9c4f0e-0000-4000-8000-000000000001, -y]
+credentials: stored
+expect:
+  exit: not_confirmed
+  stdout: { empty: true }
+  stderr: { message: confirm_non_tty_refused }

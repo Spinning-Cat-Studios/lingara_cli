@@ -1,0 +1,15 @@
+id: op.apps-list-developer-row-gone
+title: A developer row deleted after login is refused with the portal's line, not not_found
+behaviours: [B2]
+command: apps list
+argv: [apps, list]
+credentials: stored
+expect:
+  exit: refused
+  stdout: { empty: true }
+  stderr: { contains: ["(developer_account_required)", "create your developer account at https://platform.getlingara.com"] }
+exchanges:
+  order: sequence
+  items:
+    - route: app.list
+      response: { status: 403, json: { code: developer_account_required, error: A developer account is required. } }

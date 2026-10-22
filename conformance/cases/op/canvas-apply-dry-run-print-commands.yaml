@@ -1,0 +1,9 @@
+id: op.canvas-apply-dry-run-print-commands
+title: --dry-run with --print-commands is usage and sends nothing
+behaviours: [B2]
+command: canvas apply
+argv: [canvas, apply, 9f8e7d6c-0000-4000-8000-000000000001, --dry-run, --print-commands]
+credentials: stored
+expect:
+  exit: usage
+  stdout: { empty: true }

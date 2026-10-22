@@ -1,0 +1,13 @@
+# `[platform] api` names a host that does not exist: a kit that let it
+# override LINGARA_API_URL would never reach the mock (ADR 16.10.26ae D4).
+schema = 1
+
+[platform]
+api = "https://platform-toml.invalid"
+
+[[apps]]
+name = "luba"
+id = "7d1e2f30-0000-4000-8000-000000000001"
+path = "."
+port = 8787
+manifest = "lingara/connection.js"

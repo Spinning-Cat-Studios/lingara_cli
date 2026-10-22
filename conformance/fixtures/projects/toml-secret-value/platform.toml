@@ -1,0 +1,9 @@
+schema = 1
+
+[[apps]]
+name = "luba"
+path = "."
+port = 8787
+
+[apps.env]
+HOOK_KEY = "lgr_whsec_conformanceLeakedValue"

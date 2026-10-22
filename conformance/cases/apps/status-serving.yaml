@@ -1,0 +1,13 @@
+# 16.10.26ae AC15 — status_shows_live_parked_and_serving
+id: apps.status-serving
+title: apps status prints the serving version when the dev version points nowhere, and --json is the GET …/dev body as the server answered it
+behaviours: [B1]
+command: apps status
+argv: [apps, status, --json]
+credentials: stored
+project: dev-basic
+mock: platform_dev
+expect:
+  exit: ok
+  stdout:
+    json: { manifest: {}, draft_version: 1, session: { state: parked } }

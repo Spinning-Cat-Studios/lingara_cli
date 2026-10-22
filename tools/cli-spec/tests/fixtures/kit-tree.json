@@ -1,0 +1,38 @@
+{
+  "global_flags": [
+    { "name": "json", "type": "bool" },
+    { "name": "profile", "type": "string" },
+    { "name": "help", "short": "h", "type": "bool" },
+    { "name": "version", "type": "bool" }
+  ],
+  "commands": [
+    { "name": "login", "flags": [ { "name": "device", "type": "bool" }, { "name": "help", "short": "h", "type": "bool" } ] },
+    { "name": "help" },
+    { "name": "completion", "args": [ { "name": "shell" } ] },
+    { "name": "version" },
+    { "name": "__tree" }
+  ],
+  "topics": [
+    { "name": "oauth_client", "aliases": ["client"],
+      "commands": [
+        { "name": "list" },
+        { "name": "create", "flags": [
+          { "name": "ci", "type": "bool" },
+          { "name": "name", "type": "string", "required": true },
+          { "name": "type", "type": "enum", "values": ["confidential", "public"] }
+        ] },
+        { "name": "delete", "dangerous": true, "args": [ { "name": "id", "required": true } ], "flags": [
+          { "name": "yes", "short": "y", "type": "bool" },
+          { "name": "confirm", "type": "string" }
+        ] },
+        { "name": "help" }
+      ],
+      "topics": [
+        { "name": "secret", "commands": [ { "name": "create", "args": [ { "name": "client_id", "required": true } ] } ] }
+      ] },
+    { "name": "webhook",
+      "topics": [
+        { "name": "inbound", "commands": [ { "name": "create", "flags": [ { "name": "name", "type": "string", "required": true } ] } ] }
+      ] }
+  ]
+}

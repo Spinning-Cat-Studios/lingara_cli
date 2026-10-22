@@ -1,0 +1,11 @@
+id: b3.non-tty-flags-mismatch
+title: In a pipe, -y with a --confirm that is not the developer's email exits not_confirmed and sends nothing
+behaviours: [B3]
+command: oauth_client delete
+confirm: non_tty_flags_mismatch
+argv: [client, delete, 0b9c4f0e-0000-4000-8000-000000000001, -y, --confirm, someone@else.invalid]
+credentials: stored
+expect:
+  exit: not_confirmed
+  stdout: { empty: true }
+  stderr: { message: confirm_email_mismatch }

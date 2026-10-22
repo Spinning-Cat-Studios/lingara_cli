@@ -1,0 +1,28 @@
+# 16.10.26ae AC9 — points_the_dev_version_at_the_tunnel
+id: apps.dev-points
+title: apps dev opens a session, starts the app, waits for a probe past cloudflared's 530s, points the dev version at the tunnel with its session_id and draft_version, and under --json writes one value at exit
+behaviours: [B1, B5]
+command: apps dev
+argv: [apps, dev, --json]
+credentials: stored
+project: dev-basic
+mock: platform_dev
+tunnel: { fake: { answer_530_first: 2 } }
+signal: { after: { message: apps_dev_ready }, send: SIGINT }
+expect:
+  exit: interrupted
+  stdout:
+    json:
+      name: luba
+      app_id: 7d1e2f30-0000-4000-8000-000000000001
+      session_id: 5e55a0c0-0000-4000-8000-000000000001
+      urls: ["https://conformance-1.trycloudflare.com/"]
+      exit: interrupted
+  stderr: { message: apps_dev_ready, vars: { name: luba, url: "https://conformance-1.trycloudflare.com/" } }
+  calls:
+    - route: app_dev.session_open
+      json: { take_over: false }
+    - route: app_dev.get
+    - route: app_dev.patch
+      json: { render_url: "https://conformance-1.trycloudflare.com/", session_id: 5e55a0c0-0000-4000-8000-000000000001, draft_version: 1 }
+    - route: app_dev.session_end

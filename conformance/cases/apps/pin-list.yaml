@@ -1,0 +1,11 @@
+# 16.10.26ae AC22 — pins_are_local_and_the_config_is_selectable
+id: apps.pin-list
+title: apps list --pinned prints platform.toml's rows and reads nothing from the platform
+behaviours: [B1]
+command: apps list
+argv: [apps, list, --pinned, --json]
+project: pin
+expect:
+  exit: ok
+  stdout:
+    json: [ { name: luba, id: 7d1e2f30-0000-4000-8000-000000000001, path: ".", port: 8787 } ]

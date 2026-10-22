@@ -1,0 +1,47 @@
+id: b7.print-commands-writes-nothing
+title: --print-commands reads, dry-runs and prints apply's argvs as shell lines, an id made in the run as <handle>, and writes nothing
+behaviours: [B7]
+command: canvas apply
+argv: [canvas, apply, 9f8e7d6c-0000-4000-8000-000000000001, --print-commands]
+credentials: stored
+expect:
+  exit: ok
+  stdout:
+    contains:
+      - "lingara oauth_client create --name 'My server' --scope events:read\n"
+      - "lingara webhook outbound create --client '<n1>' --url https://hooks.example.com/lingara --event lesson_plan.ready\n"
+exchanges:
+  order: sequence
+  items:
+    - route: canvas.get
+      vars: { id: 9f8e7d6c-0000-4000-8000-000000000001 }
+      response:
+        status: 200
+        json:
+          id: 9f8e7d6c-0000-4000-8000-000000000001
+          active: null
+          draft:
+            draft_version: 2
+            objects: {}
+            definition:
+              schema: 2
+              nodes:
+                - { id: n1, kind: client, position: [0, 0], fields: { name: My server, scopes: ["events:read"] }, script: null, custom: false, script_name: null, params: {} }
+                - { id: n2, kind: secret, position: [0, 0], fields: {}, script: null, custom: false, script_name: null, params: {} }
+                - { id: n3, kind: webhook, position: [0, 0], fields: { url: "https://hooks.example.com/lingara", events: [lesson_plan.ready] }, script: null, custom: false, script_name: null, params: {} }
+              edges: [ { from: n1, to: n2 }, { from: n1, to: n3 } ]
+    - route: oauth_client.list
+      response: { status: 200, json: { items: [], next_cursor: null } }
+    - route: webhook_outbound.list
+      response: { status: 200, json: { items: [], next_cursor: null } }
+    - route: app.list
+      response: { status: 200, json: { items: [], next_cursor: null } }
+    - route: canvas.dry_run
+      response:
+        status: 200
+        json:
+          ok: true
+          verdicts:
+            - { handle: n1, kind: client, op: create, verdict: would_create }
+            - { handle: n2, kind: secret, op: create, verdict: would_create, note: minted_with_client }
+            - { handle: n3, kind: webhook, op: create, verdict: would_create }

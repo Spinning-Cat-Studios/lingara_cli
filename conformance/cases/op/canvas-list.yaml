@@ -1,0 +1,32 @@
+id: op.canvas-list
+title: canvas list prints ID NAME DRAFT ACTIVE UPDATED over every page
+behaviours: [B1]
+command: canvas list
+argv: [canvas, list]
+credentials: stored
+expect:
+  exit: ok
+  stdout:
+    table:
+      columns: [ID, NAME, DRAFT, ACTIVE, UPDATED]
+      rows:
+        - [9f8e7d6c-0000-4000-8000-000000000001, My flow, "true", "2", "2026-10-18T10:00:00Z"]
+        - [9f8e7d6c-0000-4000-8000-000000000002, Empty, "false", "-", "2026-10-19T10:00:00Z"]
+exchanges:
+  order: sequence
+  items:
+    - route: canvas.list
+      response:
+        status: 200
+        json:
+          items: [ { id: 9f8e7d6c-0000-4000-8000-000000000001, name: My flow, has_draft: true, active_revision: 2, updated_at: "2026-10-18T10:00:00Z" } ]
+          next_cursor: c2
+          has_more: true
+    - route: canvas.list
+      request: { query: { cursor: c2 } }
+      response:
+        status: 200
+        json:
+          items: [ { id: 9f8e7d6c-0000-4000-8000-000000000002, name: Empty, has_draft: false, active_revision: null, updated_at: "2026-10-19T10:00:00Z" } ]
+          next_cursor: null
+          has_more: false

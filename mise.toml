@@ -1,0 +1,13 @@
+# Each kit adds its toolchain here when it lands.
+[tools]
+# The TypeScript kit's engine floor (ADR 16.10.26ad D10): `engines.node` is
+# ">=22", so CI and conformance test the floor itself.
+node = "22"
+# The Go kit (ADR 16.10.26af D4): go.mod's floor is 1.23; 1.24 is the
+# toolchain the pinned goreleaser and golangci-lint still build with.
+go = "1.24"
+goreleaser = "2.11.2"
+# The Java and Kotlin kits' shared Gradle build (D5), the app kits' JDK.
+java = "temurin-17"
+# The Ruby kit (D6): the gemspec's floor.
+ruby = "3.3"

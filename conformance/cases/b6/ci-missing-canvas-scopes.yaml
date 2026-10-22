@@ -1,0 +1,15 @@
+id: b6.ci-missing-canvas-scopes
+title: A CI client holding only the platform pair is refused invalid_scope at the mint, auth_required with the recreate line
+behaviours: [B6]
+command: apps list
+argv: [apps, list]
+credentials: ci
+expect:
+  exit: auth_required
+  stdout: { empty: true }
+  stderr: { contains: ["(invalid_scope)", "recreate this client with `lingara client create --ci`"] }
+exchanges:
+  order: sequence
+  items:
+    - route: oauth.token
+      response: { status: 400, json: { error: invalid_scope, error_description: The client may not ask for canvas:read. } }

@@ -1,0 +1,12 @@
+# 16.10.26ae AC22 — pins_are_local_and_the_config_is_selectable
+id: apps.pin-config-flag
+title: --config selects another file, ahead of LINGARA_PLATFORM_TOML and the nearest platform.toml
+behaviours: [B1]
+command: apps list
+argv: [apps, list, --pinned, --json, --config, flag.toml]
+project: config-select
+env: { LINGARA_PLATFORM_TOML: env.toml }
+expect:
+  exit: ok
+  stdout:
+    json: [ { name: from-flag, path: ".", port: 8787 } ]

@@ -1,0 +1,33 @@
+id: b6.pkce-loopback
+title: login opens the portal's authorize page with PKCE, takes one callback whose state and iss match, exchanges the code and stores the developer
+behaviours: [B6]
+command: login
+argv: [login]
+credentials: none
+interact:
+  - browser: follow_url
+expect:
+  exit: ok
+  stdout: { empty: true }
+  stderr: { message: login_signed_in, vars: { email: dev@conformance.invalid } }
+  redacted: [lgr_at_conformance_browser]
+  stored_credentials: present
+exchanges:
+  order: sequence
+  items:
+    - route: oauth.authorize
+      request:
+        query:
+          response_type: code
+          client_id: lingara-cli
+          code_challenge_method: S256
+          scope: "platform:read platform:write canvas:read canvas:write"
+      response: { redirect: { to_query: redirect_uri, params: { code: c1, iss: "{base_url}" }, echo: [state] } }
+    - route: oauth.token
+      request: { headers: { authorization: { absent: true }, content-type: { prefix: application/x-www-form-urlencoded } } }
+      response:
+        status: 200
+        json: { access_token: lgr_at_conformance_browser, refresh_token: lgr_rt_conformance_browser, token_type: Bearer, expires_in: 3600, scope: "platform:read platform:write canvas:read canvas:write" }
+    - route: developer.me
+      request: { headers: { authorization: { equals: "Bearer lgr_at_conformance_browser" } } }
+      response: { status: 200, json: { developer_id: 0b9c4f0e-0000-4000-8000-0000000000de, email: dev@conformance.invalid } }

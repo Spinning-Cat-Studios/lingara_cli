@@ -1,0 +1,20 @@
+id: b4.invalid-grant-stays-auth-required
+title: A refresh refused with invalid_grant and no lingara_code exits auth_required with no replay
+behaviours: [B4, B2]
+command: apps list
+argv: [apps, list]
+credentials: stored
+expect:
+  exit: auth_required
+  stdout: { empty: true }
+exchanges:
+  order: sequence
+  items:
+    - route: app.list
+      response:
+        status: 401
+        headers: { www-authenticate: 'Bearer error="invalid_token"' }
+    - route: oauth.token
+      response:
+        status: 400
+        json: { error: invalid_grant, error_description: The refresh token is not enabled for this client. }

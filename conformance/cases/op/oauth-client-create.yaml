@@ -1,0 +1,40 @@
+id: op.oauth-client-create
+title: A confidential client is created, published, given its one-time secret and read once, and the JSON carries the secret
+behaviours: [B1, B5]
+command: oauth_client create
+argv: [client, create, --name, My server, --scope, events:read, --json]
+credentials: stored
+expect:
+  exit: ok
+  stdout:
+    json:
+      id: 0b9c4f0e-0000-4000-8000-000000000001
+      kind: oauth_client
+      name: My server
+      visibility: private
+      runtime_id: 1a1a1a1a-0000-4000-8000-000000000001
+      client_id: lgr_cid_conformance_server
+      secret: { id: 4d4d4d4d-0000-4000-8000-000000000001, value: lgr_cs_conformance_once }
+exchanges:
+  order: sequence
+  items:
+    - route: oauth_client.create
+      request:
+        json:
+          kind: oauth_client
+          name: My server
+          body: { client_type: confidential, allowed_scopes: [events:read], billing_mode: allowance, redirect_uris: [] }
+      response:
+        status: 201
+        json: { id: 0b9c4f0e-0000-4000-8000-000000000001, kind: oauth_client, name: My server, visibility: private, version: { semver: "1.0.0", state: draft } }
+    - route: oauth_client.publish
+      vars: { id: 0b9c4f0e-0000-4000-8000-000000000001, semver: "1.0.0" }
+      response: { status: 200, json: { version: { semver: "1.0.0", state: published }, projection_pending: false } }
+    - route: oauth_client.secret_create
+      vars: { id: 0b9c4f0e-0000-4000-8000-000000000001 }
+      response: { status: 201, json: { secret_id: 4d4d4d4d-0000-4000-8000-000000000001, prefix: lgr_cs_conf, secret: lgr_cs_conformance_once } }
+    - route: oauth_client.get
+      vars: { id: 0b9c4f0e-0000-4000-8000-000000000001 }
+      response:
+        status: 200
+        json: { id: 0b9c4f0e-0000-4000-8000-000000000001, kind: oauth_client, name: My server, visibility: private, runtime_id: 1a1a1a1a-0000-4000-8000-000000000001, client_id: lgr_cid_conformance_server }

@@ -1,0 +1,12 @@
+id: b3.non-tty-refused
+title: In a pipe without both flags, a delete is refused before any request, the read included
+behaviours: [B3]
+command: oauth_client delete
+confirm: non_tty_refused
+argv: [client, delete, 0b9c4f0e-0000-4000-8000-000000000001]
+stdin: ""
+credentials: stored
+expect:
+  exit: not_confirmed
+  stdout: { empty: true }
+  stderr: { message: confirm_non_tty_refused }

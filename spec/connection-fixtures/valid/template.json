@@ -1,0 +1,1 @@
+{"manifest_version":1,"default_locale":"en","name":{"en":"Demo","zh-Hans":"Demo"},"description":{"en":"A Lingara app.","zh-Hans":"A Lingara app."},"render_url":"https://dev.invalid/","slots":["home.side"],"context":[],"scopes":[],"tutor_note":false}

@@ -1,0 +1,12 @@
+# 16.10.26ae AC5 — literal_subset_and_scripted_refusal
+id: apps.update-scripted
+title: A connection.js holding a scripted statement is refused with connection_scripted, naming the statement, before any request
+behaviours: [B2]
+command: apps update
+argv: [apps, update]
+credentials: stored
+project: update-scripted
+expect:
+  exit: connection_scripted
+  stdout: { empty: true }
+  stderr: { message: connection_scripted, vars: { statement: hooks } }

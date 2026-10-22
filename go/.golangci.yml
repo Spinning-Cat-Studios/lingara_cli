@@ -1,0 +1,41 @@
+# The Go kit's code budgets (ADR 16.10.26af, Files to Change: go/.golangci.yml),
+# run by `make test-go` through a pinned golangci-lint (make/go.mk). The
+# numbers are the repository's own (.code-health/thresholds.toml) and the
+# API clients' (lingara_api_clients go/revive.toml): at most 50 lines per
+# function, cyclomatic complexity 10, 5 parameters and 300 lines per source
+# file (600 for a test file, which keeps the revive rule but at the test
+# tier). Lines stay under 160 characters.
+version: "2"
+
+linters:
+  default: standard
+  enable:
+    - funlen
+    - gocyclo
+    - lll
+    - revive
+  settings:
+    funlen:
+      lines: 50
+      statements: -1
+    gocyclo:
+      min-complexity: 10
+    lll:
+      line-length: 160
+    revive:
+      rules:
+        - name: argument-limit
+          arguments: [5]
+        - name: file-length-limit
+          arguments: [{ max: 300, skipComments: false, skipBlankLines: false }]
+        - name: function-length
+          arguments: [0, 50]
+        - name: cyclomatic
+          arguments: [10]
+  exclusions:
+    rules:
+      # Test files are held to the test tier: 600 lines (checked by
+      # file-length-limit below through the funlen/lll budgets only).
+      - path: _test\.go
+        linters: [revive]
+        text: "file-length-limit"

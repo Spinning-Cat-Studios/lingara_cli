@@ -1,0 +1,6 @@
+{
+  "schema": 1,
+  "client_id": "lingara-cli",
+  "api_url": "https://api.getlingara.com",
+  "platform_url": "https://platform.getlingara.com"
+}

@@ -1,0 +1,51 @@
+[package]
+name = "lingara-cli"
+# The repository's VERSION (ADR 16.10.26ad D9): `lingara --version` prints it.
+version = "0.1.0-alpha.1"
+edition = "2024"
+license = "MIT"
+description = "lingara, the Lingara developer CLI: OAuth clients, apps, embeds, webhooks and canvases"
+repository = "https://github.com/Spinning-Cat-Studios/lingara_cli"
+homepage = "https://getlingara.com"
+readme = "README.md"
+keywords = ["lingara", "cli", "oauth", "webhooks"]
+categories = ["command-line-utilities"]
+# assets/ is the committed copy `make sync-kit-assets` writes (ADR 16.10.26ae
+# D12): the spec files are `include_str!`ed and build.rs indexes the
+# templates, so the package carries every byte it reads.
+include = ["src/**", "assets/**", "build.rs", "README.md", "Cargo.toml"]
+build = "build.rs"
+
+[[bin]]
+name = "lingara"
+path = "src/main.rs"
+
+[dependencies]
+base64 = "0.22"
+clap = { version = "4", features = ["derive"] }
+dirs = "6"
+# vendored: libdbus builds from source, so neither a Linux runner nor a
+# user's `cargo install` needs the system dbus-1 dev package (ADR 22.10.26d D1).
+keyring = { version = "3", features = ["apple-native", "windows-native", "sync-secret-service", "vendored"] }
+open = "5"
+rand = "0.9"
+# blocking: `apps dev` polls the tunnel's metrics address and probes the
+# tunnel itself, outside the platform transport (16.10.26ae D8).
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "blocking"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order"] }
+sha2 = "0.10"
+# Ctrl+C and SIGTERM reach `apps dev` as a flag, so it parks the session
+# before it stops its children (16.10.26ae D7 step 8).
+signal-hook = "0.3"
+tokio = { version = "1", features = ["rt", "net", "time"] }
+# preserve_order: platform.toml's first refusal is the first in file order,
+# as every kit reports it (16.10.26ae D4).
+toml = { version = "0.8", features = ["preserve_order"] }
+
+[target.'cfg(unix)'.dependencies]
+# kill(2) on a child's process group (16.10.26ae D7 step 8).
+libc = "0.2"
+
+[dev-dependencies]
+tempfile = "3"

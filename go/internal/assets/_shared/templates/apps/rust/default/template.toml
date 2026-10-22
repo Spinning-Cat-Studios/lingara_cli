@@ -1,0 +1,2 @@
+start = "cargo run --quiet"
+manifest = "lingara/connection.js"

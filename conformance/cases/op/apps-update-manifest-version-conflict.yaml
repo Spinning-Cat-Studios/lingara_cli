@@ -1,0 +1,10 @@
+# 16.10.26ae AC26 — manifest_and_version_conflict
+id: op.apps-update-manifest-version-conflict
+title: apps update refuses --manifest with --version, a conflicts pair, as usage with zero requests
+behaviours: [B2]
+command: apps update
+argv: [apps, update, 7d1e2f30-0000-4000-8000-000000000001, --manifest, "{fixtures}/manifests/flashcards.json", --version, 1.0.0]
+credentials: stored
+expect:
+  exit: usage
+  stdout: { empty: true }

@@ -1,0 +1,17 @@
+# 16.10.26ae AC22 — pins_are_local_and_the_config_is_selectable
+id: apps.pin-by-id
+title: apps pin <id> --path reads the app once for its name and adds a row to platform.toml and, with the placeholder id, to its example
+behaviours: [B5]
+command: apps pin
+argv: [apps, pin, 9c9c9c9c-0000-4000-8000-000000000002, --path, sub]
+credentials: stored
+project: pin
+expect:
+  exit: ok
+  stdout: { empty: true }
+  files: { golden: apps-pin/by-id }
+exchanges:
+  items:
+    - route: app.get
+      vars: { id: 9c9c9c9c-0000-4000-8000-000000000002 }
+      response: { status: 200, json: { id: 9c9c9c9c-0000-4000-8000-000000000002, kind: app, name: Second App } }

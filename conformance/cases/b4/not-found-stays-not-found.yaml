@@ -1,0 +1,16 @@
+id: b4.not-found-stays-not-found
+title: A coded 404 that is not B4's stays not_found, so B4 does not swallow real 404s
+behaviours: [B4, B2]
+command: oauth_client get
+argv: [client, get, 0b9c4f0e-0000-4000-8000-000000000009]
+credentials: stored
+expect:
+  exit: not_found
+  stdout: { empty: true }
+  stderr: { contains: [object_not_found] }
+exchanges:
+  order: sequence
+  items:
+    - route: oauth_client.get
+      vars: { id: 0b9c4f0e-0000-4000-8000-000000000009 }
+      response: { status: 404, json: { code: object_not_found, error: No such object. } }

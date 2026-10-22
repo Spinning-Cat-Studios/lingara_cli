@@ -1,0 +1,32 @@
+id: op.oauth-client-list
+title: A list follows next_cursor to the end and prints one table of every page
+behaviours: [B1]
+command: oauth_client list
+argv: [oauth_client, list]
+credentials: stored
+expect:
+  exit: ok
+  stdout:
+    table:
+      columns: [ID, NAME, TYPE, SCOPES, CREATED]
+      rows:
+        - [0b9c4f0e-0000-4000-8000-000000000001, My server, confidential, "events:read,events:write", "2026-10-16T09:00:00Z"]
+        - [0b9c4f0e-0000-4000-8000-000000000002, Release pipeline, "-", "-", "2026-10-17T09:00:00Z"]
+exchanges:
+  order: sequence
+  items:
+    - route: oauth_client.list
+      response:
+        status: 200
+        json:
+          items:
+            - { id: 0b9c4f0e-0000-4000-8000-000000000001, kind: oauth_client, name: My server, client_type: confidential, allowed_scopes: [events:read, events:write], created_at: "2026-10-16T09:00:00Z" }
+          next_cursor: 0b9c4f0e-0000-4000-8000-000000000001
+    - route: oauth_client.list
+      request: { query: { cursor: 0b9c4f0e-0000-4000-8000-000000000001 } }
+      response:
+        status: 200
+        json:
+          items:
+            - { id: 0b9c4f0e-0000-4000-8000-000000000002, kind: oauth_client, name: Release pipeline, created_at: "2026-10-17T09:00:00Z" }
+          next_cursor: null

@@ -1,0 +1,17 @@
+# 16.10.26ae AC12 — clean_exit_parks_the_url
+id: apps.dev-app-exits-ok
+title: The app exiting 0 ends the session, parks it, and exits ok
+behaviours: [B5]
+command: apps dev
+argv: [apps, dev]
+credentials: stored
+project: { slug: dev-basic, app: { exit_after_ms: 4000, status: 0 } }
+mock: platform_dev
+tunnel: fake
+expect:
+  exit: ok
+  stdout: { empty: true }
+  calls:
+    - route: app_dev.session_open
+    - route: app_dev.patch
+    - route: app_dev.session_end

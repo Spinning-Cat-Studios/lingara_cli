@@ -1,0 +1,19 @@
+# 16.10.26ae AC14 — bring_your_own_tunnel
+id: apps.dev-own-tunnel
+title: --tunnel none --render-url never looks for cloudflared and points the dev version at that URL as given
+behaviours: [B5]
+command: apps dev
+argv: [apps, dev, --tunnel, none, --render-url, "https://example.test/"]
+credentials: stored
+project: dev-basic
+mock: platform_dev
+signal: { after: { message: apps_dev_ready }, send: SIGINT }
+expect:
+  exit: interrupted
+  stdout: { empty: true }
+  stderr: { message: apps_dev_ready, vars: { name: luba, url: "https://example.test/" } }
+  calls:
+    - route: app_dev.session_open
+    - route: app_dev.patch
+      json: { render_url: "https://example.test/", session_id: 5e55a0c0-0000-4000-8000-000000000001, draft_version: 1 }
+    - route: app_dev.session_end

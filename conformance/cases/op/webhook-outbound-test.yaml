@@ -1,0 +1,15 @@
+id: op.webhook-outbound-test
+title: test sends one test delivery and prints its answer
+behaviours: [B1]
+command: webhook outbound test
+argv: [webhook, outbound, test, 3c5d7e9f-0000-4000-8000-000000000001, --json]
+credentials: stored
+expect:
+  exit: ok
+  stdout: { json: { delivered: true, status: 204 } }
+exchanges:
+  order: sequence
+  items:
+    - route: webhook_outbound.test
+      vars: { id: 3c5d7e9f-0000-4000-8000-000000000001 }
+      response: { status: 200, json: { delivered: true, status: 204 } }

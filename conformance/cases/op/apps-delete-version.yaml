@@ -1,0 +1,26 @@
+id: op.apps-delete-version
+title: With --version, the prompt says only that version goes, and the version delete carries the email
+behaviours: [B3]
+command: apps delete
+confirm: tty_ok
+argv: [apps, delete, 7d1e2f30-0000-4000-8000-000000000001, --version, "1.0.0"]
+tty: true
+credentials: stored
+interact:
+  - expect: { message: consequence_version, vars: { semver: "1.0.0" } }
+    send: "yes\n"
+  - expect: { message: confirm_type_email }
+    send: "dev@conformance.invalid\n"
+expect:
+  exit: ok
+  stdout: { empty: true }
+exchanges:
+  order: sequence
+  items:
+    - route: app.get
+      vars: { id: 7d1e2f30-0000-4000-8000-000000000001 }
+      response: { status: 200, json: { id: 7d1e2f30-0000-4000-8000-000000000001, kind: app, name: Flashcards, parent_id: 0b9c4f0e-0000-4000-8000-000000000001 } }
+    - route: app.delete_version
+      vars: { id: 7d1e2f30-0000-4000-8000-000000000001, semver: "1.0.0" }
+      request: { json: { confirm: dev@conformance.invalid } }
+      response: { status: 200, json: { semver: "1.0.0", effect: tombstone } }

@@ -1,0 +1,14 @@
+# 16.10.26ae AC6 — secret_values_are_refused_offline
+id: apps.toml-accepted
+title: A public client id value and a TOKENIZER key are not secrets, so the file reads
+behaviours: [B1]
+command: apps list
+argv: [apps, list, --pinned]
+credentials: stored
+project: toml-accepted
+expect:
+  exit: ok
+  stdout:
+    table:
+      columns: [NAME, ID, PATH, PORT]
+      rows: [[luba, "-", ".", "8787"]]

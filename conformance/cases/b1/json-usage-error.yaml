@@ -1,0 +1,10 @@
+id: b1.json-usage-error
+title: An argv the kit cannot parse, under --json, exits usage with one JSON error line on stderr and nothing on stdout
+behaviours: [B1, B2]
+command: apps list
+argv: [apps, list, --nope, --json]
+credentials: stored
+expect:
+  exit: usage
+  stdout: { empty: true }
+  stderr: { json_error: { exit: usage } }

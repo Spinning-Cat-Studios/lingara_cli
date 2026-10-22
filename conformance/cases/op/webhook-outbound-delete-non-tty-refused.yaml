@@ -1,0 +1,11 @@
+id: op.webhook-outbound-delete-non-tty-refused
+title: In a pipe without both flags, an outbound webhook delete is refused before any request
+behaviours: [B3]
+command: webhook outbound delete
+confirm: non_tty_refused
+argv: [webhook, outbound, delete, 3c5d7e9f-0000-4000-8000-000000000001]
+credentials: stored
+expect:
+  exit: not_confirmed
+  stdout: { empty: true }
+  stderr: { message: confirm_non_tty_refused }

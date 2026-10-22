@@ -1,0 +1,2 @@
+start = "php server.php"
+manifest_command = "php manifest.php"

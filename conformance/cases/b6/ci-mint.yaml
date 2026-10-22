@@ -1,0 +1,22 @@
+id: b6.ci-mint
+title: With CI client credentials, a command mints a four-scope token with client_secret_basic, uses it, and stores nothing
+behaviours: [B6, B5]
+command: apps list
+argv: [apps, list, --json]
+credentials: ci
+expect:
+  exit: ok
+  stdout: { json: [] }
+  redacted: [lgr_cs_conformance_ci]
+  stored_credentials: absent
+exchanges:
+  order: sequence
+  items:
+    - route: oauth.token
+      request:
+        headers: { authorization: { equals: "Basic bGdyX2NpZF9jb25mb3JtYW5jZV9jaTpsZ3JfY3NfY29uZm9ybWFuY2VfY2k=" } }
+        form: { grant_type: client_credentials, scope: "platform:read platform:write canvas:read canvas:write" }
+      response: { status: 200, json: { access_token: lgr_at_conformance_ci, token_type: Bearer, expires_in: 3600, scope: "platform:read platform:write canvas:read canvas:write" } }
+    - route: app.list
+      request: { headers: { authorization: { equals: "Bearer lgr_at_conformance_ci" } } }
+      response: { status: 200, json: { items: [], next_cursor: null } }

@@ -1,0 +1,13 @@
+# 16.10.26ae AC8 — missing_cloudflared_prints_the_hint
+id: apps.dev-missing-cloudflared
+title: With no cloudflared at LINGARA_CLOUDFLARED, apps dev exits tool_missing with the install hint verbatim, and sends no request
+behaviours: [B2]
+command: apps dev
+argv: [apps, dev]
+credentials: stored
+project: dev-basic
+tunnel: missing
+expect:
+  exit: tool_missing
+  stdout: { empty: true }
+  stderr: { message: tool_missing_cloudflared }

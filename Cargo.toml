@@ -1,0 +1,10 @@
+[workspace]
+# resolver 3 by name: a virtual manifest has no edition to imply it, and
+# without it Cargo falls back to resolver 1.
+resolver = "3"
+# Shipped crates only (ADR 16.10.26ab D1): a private tool builds with
+# --manifest-path, so the public manifest never lists a member the public
+# tree lacks.
+members = ["tools/cli-spec", "conformance/runner", "rust"]
+# The two vendored submodules build through their own manifests and locks.
+exclude = ["tools/scs-snapshot", "tools/code-health"]

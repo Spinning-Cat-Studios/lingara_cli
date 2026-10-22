@@ -1,0 +1,56 @@
+# 16.10.26ae AC4 — registers_when_logged_in_and_hints_when_not
+id: apps.create-registers
+title: With a session, create scaffolds, then registers a private client and app from the project's manifest, publishes both, and writes the app's id into platform.toml
+behaviours: [B1, B5]
+command: apps create
+argv: [apps, create, demo, --json]
+credentials: stored
+expect:
+  exit: ok
+  stdout:
+    json: { id: 7d1e2f30-0000-4000-8000-000000000001, kind: app, name: Demo, parent_id: 0b9c4f0e-0000-4000-8000-000000000001, client_id: lgr_cid_conformance_app }
+  stderr: { empty: true }
+  files: { golden: apps-create/typescript-registered }
+exchanges:
+  order: sequence
+  items:
+    - route: oauth_client.create
+      request:
+        json:
+          kind: oauth_client
+          name: Demo
+          body: { client_type: confidential, allowed_scopes: [], billing_mode: allowance, redirect_uris: [] }
+      response:
+        status: 201
+        json: { id: 0b9c4f0e-0000-4000-8000-000000000001, kind: oauth_client, name: Demo, visibility: private, version: { semver: "1.0.0", state: draft } }
+    - route: oauth_client.publish
+      vars: { id: 0b9c4f0e-0000-4000-8000-000000000001, semver: "1.0.0" }
+      response: { status: 200, json: { version: { semver: "1.0.0", state: published }, projection_pending: false } }
+    - route: app.create
+      request:
+        json:
+          kind: app
+          name: Demo
+          parent_id: 0b9c4f0e-0000-4000-8000-000000000001
+          body:
+            manifest:
+              manifest_version: 1
+              default_locale: en
+              name: { en: Demo, zh-Hans: Demo }
+              description: { en: A Lingara app., zh-Hans: A Lingara app. }
+              render_url: "https://dev.invalid/"
+              slots: [home.side]
+              context: []
+              scopes: []
+              tutor_note: false
+      response:
+        status: 201
+        json: { id: 7d1e2f30-0000-4000-8000-000000000001, kind: app, visibility: private, version: { semver: "1.0.0", state: draft } }
+    - route: app.publish
+      vars: { id: 7d1e2f30-0000-4000-8000-000000000001, semver: "1.0.0" }
+      response: { status: 200, json: { version: { semver: "1.0.0", state: published } } }
+    - route: app.get
+      vars: { id: 7d1e2f30-0000-4000-8000-000000000001 }
+      response:
+        status: 200
+        json: { id: 7d1e2f30-0000-4000-8000-000000000001, kind: app, name: Demo, parent_id: 0b9c4f0e-0000-4000-8000-000000000001, client_id: lgr_cid_conformance_app }

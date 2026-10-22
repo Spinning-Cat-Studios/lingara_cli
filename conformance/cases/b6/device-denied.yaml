@@ -1,0 +1,18 @@
+id: b6.device-denied
+title: A device sign-in the developer declined is auth_required, and says so
+behaviours: [B6]
+command: login
+argv: [login, --device]
+credentials: none
+expect:
+  exit: auth_required
+  stdout: { empty: true }
+  stderr: { contains: [sign-in was declined] }
+  stored_credentials: absent
+exchanges:
+  order: sequence
+  items:
+    - route: oauth.device_authorization
+      response: { status: 200, json: { device_code: dc1, user_code: ABCD-EFGH, verification_uri: "{base_url}/device", interval: 1 } }
+    - route: oauth.token
+      response: { status: 400, json: { error: access_denied } }

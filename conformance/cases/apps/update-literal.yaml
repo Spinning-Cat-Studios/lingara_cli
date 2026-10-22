@@ -1,0 +1,37 @@
+# 16.10.26ae AC5 — literal_subset_and_scripted_refusal
+# 16.10.26ae AC17 — manifest_warnings_print_and_never_fail
+id: apps.update-literal
+title: update reads lingara/connection.js's literal subset, listing fields included, into the wire manifest and pushes it to the dev version; its single_locale warning prints and never fails
+behaviours: [B1, B5]
+command: apps update
+argv: [apps, update, --json]
+credentials: stored
+project: update-listing
+mock: platform_dev
+expect:
+  exit: ok
+  stdout:
+    json:
+      manifest: &listing
+        manifest_version: 1
+        default_locale: ja
+        name: { ja: ダイブログ }
+        description: { ja: 潜水の記録。, en: "Your dives, logged." }
+        render_url: "https://dive.example/lingara/render"
+        slots: [home.side, plans.empty_detail]
+        context: [languages, plan_summary]
+        scopes: ["lesson_plans:read"]
+        tutor_note: true
+        long_description: { ja: "一段落目。\n\n二段落目。" }
+        developer: { name: Luba, url: "https://dive.example", support_url: "https://dive.example/help" }
+        images:
+          - { sha256: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa, role: hero, alt: { ja: 地図 } }
+          - { sha256: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb, role: screenshot, alt: { ja: 記録, en: Log } }
+      draft_version: 2
+      session: { state: parked }
+      warnings: [single_locale]
+  stderr: { message: manifest_warning, vars: { code: single_locale } }
+  calls:
+    - route: app_dev.get
+    - route: app_dev.patch
+      json: { manifest: *listing, draft_version: 1 }

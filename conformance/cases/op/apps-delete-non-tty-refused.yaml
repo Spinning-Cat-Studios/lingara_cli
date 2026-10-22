@@ -1,0 +1,11 @@
+id: op.apps-delete-non-tty-refused
+title: In a pipe without both flags, an app delete is refused before any request
+behaviours: [B3]
+command: apps delete
+confirm: non_tty_refused
+argv: [apps, delete, 7d1e2f30-0000-4000-8000-000000000001, -y]
+credentials: stored
+expect:
+  exit: not_confirmed
+  stdout: { empty: true }
+  stderr: { message: confirm_non_tty_refused }

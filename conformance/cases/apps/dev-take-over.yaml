@@ -1,0 +1,21 @@
+# 16.10.26ae AC13 — one_session_per_dev_version
+id: apps.dev-take-over
+title: --take-over sends take_over true, ends the other terminal's session server-side, and points the dev version as usual
+behaviours: [B5]
+command: apps dev
+argv: [apps, dev, --take-over]
+credentials: stored
+project: dev-basic
+mock: platform_dev
+mock_seed: { held_until: "2026-10-20T15:00:00Z" }
+tunnel: fake
+signal: { after: { message: apps_dev_ready }, send: SIGINT }
+expect:
+  exit: interrupted
+  stdout: { empty: true }
+  calls:
+    - route: app_dev.session_open
+      json: { take_over: true }
+    - route: app_dev.patch
+      json: { render_url: "https://conformance-1.trycloudflare.com/", session_id: 5e55a0c0-0000-4000-8000-000000000001, draft_version: 1 }
+    - route: app_dev.session_end

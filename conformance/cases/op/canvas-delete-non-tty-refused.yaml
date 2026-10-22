@@ -1,0 +1,11 @@
+id: op.canvas-delete-non-tty-refused
+title: In a pipe without both flags, a canvas delete is refused before any request, its lookup included
+behaviours: [B3]
+command: canvas delete
+confirm: non_tty_refused
+argv: [canvas, delete, 9f8e7d6c-0000-4000-8000-000000000001]
+credentials: stored
+expect:
+  exit: not_confirmed
+  stdout: { empty: true }
+  stderr: { message: confirm_non_tty_refused }

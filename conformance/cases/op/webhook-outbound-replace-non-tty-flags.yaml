@@ -1,0 +1,39 @@
+id: op.webhook-outbound-replace-non-tty-flags
+title: Flagged, replace sends only its two lookups, then the new endpoint's create, and the old endpoint's delete last
+behaviours: [B3]
+command: webhook outbound replace
+confirm: non_tty_flags
+argv: [webhook, outbound, replace, 3c5d7e9f-0000-4000-8000-000000000001, -y, --confirm, dev@conformance.invalid, --json]
+credentials: stored
+expect:
+  exit: ok
+  stdout:
+    json: { id: 3c5d7e9f-0000-4000-8000-000000000002, kind: webhook_out, secret: { id: 4d4d4d4d-0000-4000-8000-000000000006, value: lgr_cs_conformance_new_signing } }
+exchanges:
+  order: sequence
+  items:
+    - route: webhook_outbound.get
+      vars: { id: 3c5d7e9f-0000-4000-8000-000000000001 }
+      response:
+        status: 200
+        json: { id: 3c5d7e9f-0000-4000-8000-000000000001, kind: webhook_out, name: https://hooks.example.com/lingara, parent_id: 0b9c4f0e-0000-4000-8000-000000000001, serving_version: "1.0.0", versions: [ { semver: "1.0.0", state: published } ] }
+    - route: webhook_outbound.version_get
+      vars: { id: 3c5d7e9f-0000-4000-8000-000000000001, semver: "1.0.0" }
+      response: { status: 200, json: { semver: "1.0.0", body: { url: https://hooks.example.com/lingara, event_types: [lesson_plan.ready] } } }
+    - route: webhook_outbound.create
+      request:
+        json: { kind: webhook_out, name: https://hooks.example.com/lingara, parent_id: 0b9c4f0e-0000-4000-8000-000000000001, body: { url: https://hooks.example.com/lingara, event_types: [lesson_plan.ready] } }
+      response: { status: 201, json: { id: 3c5d7e9f-0000-4000-8000-000000000002, visibility: private, version: { semver: "1.0.0" } } }
+    - route: webhook_outbound.publish
+      vars: { id: 3c5d7e9f-0000-4000-8000-000000000002, semver: "1.0.0" }
+      response: { status: 200, json: { version: { semver: "1.0.0", state: published } } }
+    - route: webhook_outbound.secret_create
+      vars: { id: 3c5d7e9f-0000-4000-8000-000000000002 }
+      response: { status: 201, json: { secret_id: 4d4d4d4d-0000-4000-8000-000000000006, secret: lgr_cs_conformance_new_signing } }
+    - route: webhook_outbound.get
+      vars: { id: 3c5d7e9f-0000-4000-8000-000000000002 }
+      response: { status: 200, json: { id: 3c5d7e9f-0000-4000-8000-000000000002, kind: webhook_out } }
+    - route: webhook_outbound.delete
+      vars: { id: 3c5d7e9f-0000-4000-8000-000000000001 }
+      request: { json: { confirm: dev@conformance.invalid } }
+      response: { status: 204 }

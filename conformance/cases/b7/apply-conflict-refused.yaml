@@ -1,0 +1,38 @@
+id: b7.apply-conflict-refused
+title: An activate answered 409 canvas_conflict (the draft was promoted meanwhile) is refused, with a line to read the canvas again
+behaviours: [B7]
+command: canvas apply
+argv: [canvas, apply, 9f8e7d6c-0000-4000-8000-000000000001]
+credentials: stored
+expect:
+  exit: refused
+  stderr: { contains: ["(canvas_conflict)", "lingara canvas get 9f8e7d6c-0000-4000-8000-000000000001"] }
+exchanges:
+  order: sequence
+  items:
+    - route: canvas.get
+      vars: { id: 9f8e7d6c-0000-4000-8000-000000000001 }
+      response:
+        status: 200
+        json:
+          id: 9f8e7d6c-0000-4000-8000-000000000001
+          active: null
+          draft:
+            draft_version: 9
+            objects: { n1: { id: 1a1a1a1a-0000-4000-8000-000000000001 } }
+            definition:
+              schema: 2
+              nodes: [ { id: n1, kind: client, position: [0, 0], fields: { name: My server, scopes: [] }, script: null, custom: false, script_name: null, params: {} } ]
+              edges: []
+    - route: oauth_client.list
+      response: { status: 200, json: { items: [ { id: 0b9c4f0e-0000-4000-8000-000000000001, runtime_id: 1a1a1a1a-0000-4000-8000-000000000001, parent_id: null } ], next_cursor: null } }
+    - route: webhook_outbound.list
+      response: { status: 200, json: { items: [], next_cursor: null } }
+    - route: app.list
+      response: { status: 200, json: { items: [], next_cursor: null } }
+    - route: canvas.dry_run
+      response: { status: 200, json: { ok: true, verdicts: [ { handle: n1, kind: client, op: update, verdict: would_update, changes: [] } ] } }
+    - route: canvas.activate
+      vars: { id: 9f8e7d6c-0000-4000-8000-000000000001 }
+      request: { json: { draft_version: 9, outcome: complete, objects: { n1: { id: 1a1a1a1a-0000-4000-8000-000000000001 } } } }
+      response: { status: 409, json: { code: canvas_conflict, error: That draft was already applied. } }

@@ -1,0 +1,401 @@
+name: CI
+
+# Ships with the public repository, so it invokes only make targets the
+# shipped make files define, checks out no submodule, and reads no secret.
+# Each kit adds its toolchain setup here (and in the private health lane),
+# because `make check` builds every kit for check-tree.
+#
+# Toolchains: mise.toml pins Node, Go, goreleaser, the JDK and Ruby, so
+# jdx/mise-action installs them; PHP comes from setup-php with pcntl and
+# posix, which the PHP kit's `apps dev` requires (ADR 16.10.26af D2).
+
+on:
+  push:
+    branches: [main]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  check:
+    name: Schema, docs, trees and tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: pcntl, posix
+          tools: composer
+      - uses: jdx/mise-action@v2
+      - name: The TypeScript kit's dependencies
+        run: npm --prefix typescript ci
+
+      - name: The schema holds, the docs are current, every kit's tree and version match (22.10.26d AC1)
+        run: make check
+
+      - name: Test
+        run: make test
+
+      # The other five kits run every case on macOS and Linux in their own
+      # jobs below (16.10.26af AC1–AC5).
+      - name: The reference kits through every conformance case
+        run: make conformance-rust conformance-typescript
+
+  # ADR 16.10.26af AC1–AC5: each kit through every conformance case, on both
+  # conformance platforms (16.10.26ac D5), one job per kit.
+  conformance-go:
+    name: Go kit conformance (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: jdx/mise-action@v2
+      - name: 16.10.26af AC1
+        run: make conformance-go
+
+  conformance-java:
+    name: Java kit conformance (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: jdx/mise-action@v2
+      - name: 16.10.26af AC2, through the shaded jar
+        run: make conformance-java
+
+  conformance-kotlin:
+    name: Kotlin kit conformance (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: jdx/mise-action@v2
+      - name: 16.10.26af AC3, through the shaded jar
+        run: make conformance-kotlin
+
+  conformance-ruby:
+    name: Ruby kit conformance (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: jdx/mise-action@v2
+      - name: 16.10.26af AC4, 22.10.26d AC2
+        run: make conformance-ruby
+
+  conformance-php:
+    name: PHP kit conformance (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: pcntl, posix
+          tools: composer
+      - uses: jdx/mise-action@v2
+      - name: 16.10.26af AC5, with ext-pcntl loaded (D1)
+        run: make conformance-php
+
+  # 16.10.26af AC6, AC7: each kit's __tree against the schema, and its
+  # --version line, one matrix row per kit so a failure names it.
+  check-tree-kits:
+    name: The ${{ matrix.lang }} kit's tree
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        lang: [go, java, kotlin, ruby, php]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: shivammathur/setup-php@v2
+        if: matrix.lang == 'php'
+        with:
+          php-version: '8.2'
+          tools: composer
+      - uses: jdx/mise-action@v2
+      # One step per kit, each naming its target, so the leak scan can read it.
+      - name: 16.10.26af AC6, Go
+        if: matrix.lang == 'go'
+        run: make check-tree-go
+      - name: 16.10.26af AC6, Java
+        if: matrix.lang == 'java'
+        run: make check-tree-java
+      - name: 16.10.26af AC6, Kotlin
+        if: matrix.lang == 'kotlin'
+        run: make check-tree-kotlin
+      - name: 16.10.26af AC6, Ruby
+        if: matrix.lang == 'ruby'
+        run: make check-tree-ruby
+      - name: 16.10.26af AC6, PHP
+        if: matrix.lang == 'php'
+        run: make check-tree-php
+
+  check-version-kits:
+    name: The ${{ matrix.lang }} kit's --version
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        lang: [go, java, kotlin, ruby, php]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        if: matrix.lang == 'php'
+        with:
+          php-version: '8.2'
+          tools: composer
+      - uses: jdx/mise-action@v2
+      # One step per kit, each naming its target, so the leak scan can read it.
+      - name: 16.10.26af AC7, Go
+        if: matrix.lang == 'go'
+        run: make check-version-go
+      - name: 16.10.26af AC7, Java
+        if: matrix.lang == 'java'
+        run: make check-version-java
+      - name: 16.10.26af AC7, Kotlin
+        if: matrix.lang == 'kotlin'
+        run: make check-version-kotlin
+      - name: 16.10.26af AC7, Ruby
+        if: matrix.lang == 'ruby'
+        run: make check-version-ruby
+      - name: 16.10.26af AC7, PHP
+        if: matrix.lang == 'php'
+        run: make check-version-php
+
+  # 16.10.26af AC8: six archives, SHA256SUMS, the formula, a byte-identical
+  # rebuild; since ADR 22.10.26s AC5, archive names equal to languages.toml's
+  # `uploaded`, which needs the pinned release-manifest and so Rust.
+  # --snapshot runs no publisher, so the formula is never pushed from here.
+  go-release-snapshot:
+    name: The Go release artefacts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: jdx/mise-action@v2
+      - uses: dtolnay/rust-toolchain@stable
+      - name: 16.10.26af AC8
+        run: make check-release-snapshot-go
+
+  # 16.10.26af AC9: both JVM publications in the staging repository, signed
+  # by a throwaway key the target generates; the real key stays in release.
+  maven-staging-dry-run:
+    name: The Central staging publication
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jdx/mise-action@v2
+      - name: 16.10.26af AC9
+        run: make maven-staging-dry-run
+
+  # 16.10.26af AC10: java -jar …-all.jar with an empty local Maven repository.
+  shaded-jar-runs-alone:
+    name: The shaded jars run alone
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jdx/mise-action@v2
+      - name: 16.10.26af AC10, 22.10.26d AC7
+        run: make check-shaded-jars
+
+  # 16.10.26af AC11: gem build; executables exactly lingara; every asset.
+  ruby-package-dry-run:
+    name: The gem
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jdx/mise-action@v2
+      - name: 16.10.26af AC11
+        run: make package-ruby
+
+  # 16.10.26af AC12: the split tree and lingara.phar.
+  php-package-dry-run:
+    name: The Packagist split and the PHAR
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: composer
+          ini-values: phar.readonly=0
+      - uses: jdx/mise-action@v2
+      - name: 16.10.26af AC12
+        run: make package-php
+
+  # 16.10.26af AC14: the install pages, gemspec, composer.json, poms and the
+  # formula name lingara_cli, never a private repository or a home path.
+  public-metadata-scan:
+    name: Public metadata
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jdx/mise-action@v2
+      - name: 16.10.26af AC14
+        run: make check-public-metadata
+
+  # ADR 16.10.26ae D12: each kit as its registry would ship it, installed and
+  # run from outside the checkout, so a kit that reads ../spec or ../templates
+  # at run time fails here and not on a developer's machine. 16.10.26af widens
+  # the matrix to seven (AC15).
+  conformance-packaged-kits:
+    name: The packed ${{ matrix.lang }} kit, from outside the checkout
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        lang: [rust, typescript, go, java, kotlin, ruby, php]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: shivammathur/setup-php@v2
+        if: matrix.lang == 'php'
+        with:
+          php-version: '8.2'
+          extensions: pcntl, posix
+          tools: composer
+          ini-values: phar.readonly=0
+      - uses: jdx/mise-action@v2
+      - name: The TypeScript kit's dependencies
+        run: npm --prefix typescript ci
+      - name: check-kit-assets fails a one-byte change
+        run: make check-kit-assets-selftest
+      # One step per kit, each naming its target, so the leak scan can read it.
+      - name: The packed crate through the create and b3 cases
+        if: matrix.lang == 'rust'
+        run: make conformance-packaged-rust
+      - name: The npm pack tarball through the create and b3 cases
+        if: matrix.lang == 'typescript'
+        run: make conformance-packaged-typescript
+      - name: go/ alone, built outside the checkout (16.10.26af AC15)
+        if: matrix.lang == 'go'
+        run: make conformance-packaged-go
+      - name: The Java shaded jar, copied out (16.10.26af AC15)
+        if: matrix.lang == 'java'
+        run: make conformance-packaged-java
+      - name: The Kotlin shaded jar, copied out (16.10.26af AC15)
+        if: matrix.lang == 'kotlin'
+        run: make conformance-packaged-kotlin
+      - name: The gem, installed into a scratch GEM_HOME (16.10.26af AC15)
+        if: matrix.lang == 'ruby'
+        run: make conformance-packaged-ruby
+      - name: The split tree and the PHAR (16.10.26af AC15)
+        if: matrix.lang == 'php'
+        run: make conformance-packaged-php
+
+  # ADR 16.10.26ae AC24: process groups and their stop on Windows, which
+  # conformance does not cover (pseudo-terminals make it macOS and Linux only).
+  supervise-windows:
+    name: Process groups on Windows
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: jdx/mise-action@v2
+      - name: The TypeScript kit's dependencies
+        run: npm --prefix typescript ci
+      - name: Rust
+        run: make test-rust-supervise
+      - name: TypeScript
+        run: make test-typescript-supervise
+
+  # ADR 16.10.26af D4: the Go kit ships Windows binaries, so its process tree
+  # (a Job Object with KILL_ON_JOB_CLOSE) is unit-tested on Windows, which
+  # conformance never judges.
+  go-windows-unit:
+    name: The Go kit's process tree on Windows
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+      - name: The supervise package's tests
+        run: make test-go-supervise
+
+  # ADR 16.10.26ae AC3: each template scaffolds and passes its own offline
+  # test against the app-kit release templates/VERSIONS.toml pins. Advisory
+  # until that release is published: a pin ahead of the registries cannot
+  # install, and `make check-template-pins` says so.
+  templates-smoke:
+    name: The ${{ matrix.lang }} templates' own tests
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        lang: [typescript, rust, go, java, kotlin, ruby, php]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: jdx/mise-action@v2
+      - uses: actions/setup-go@v5
+        if: matrix.lang == 'go'
+        with:
+          go-version: '1.23'
+      - uses: actions/setup-java@v4
+        if: matrix.lang == 'java' || matrix.lang == 'kotlin'
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        if: matrix.lang == 'java' || matrix.lang == 'kotlin'
+      - uses: ruby/setup-ruby@v1
+        if: matrix.lang == 'ruby'
+        with:
+          ruby-version: '3.3'
+      - uses: shivammathur/setup-php@v2
+        if: matrix.lang == 'php'
+        with:
+          php-version: '8.3'
+          tools: composer
+      - name: Is the pinned app-kit release out?
+        run: make check-template-pins
+      - name: Scaffold both variants and run their own tests
+        env:
+          TEMPLATE_LANG: ${{ matrix.lang }}
+        run: make templates-smoke LANG="$TEMPLATE_LANG"

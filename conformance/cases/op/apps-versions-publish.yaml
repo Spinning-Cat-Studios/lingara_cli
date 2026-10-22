@@ -1,0 +1,16 @@
+id: op.apps-versions-publish
+title: versions publish takes an approved version live
+behaviours: [B1]
+command: apps versions publish
+argv: [apps, versions, publish, 7d1e2f30-0000-4000-8000-000000000001, "1.1.0", --json]
+credentials: stored
+expect:
+  exit: ok
+  stdout:
+    json: { version: { semver: "1.1.0", state: published }, projection_pending: false }
+exchanges:
+  order: sequence
+  items:
+    - route: app.publish
+      vars: { id: 7d1e2f30-0000-4000-8000-000000000001, semver: "1.1.0" }
+      response: { status: 200, json: { version: { semver: "1.1.0", state: published }, projection_pending: false } }

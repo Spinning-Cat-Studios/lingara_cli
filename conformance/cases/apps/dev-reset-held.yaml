@@ -1,0 +1,14 @@
+# 16.10.26ae AC21 — reset_returns_the_owner_to_serving
+id: apps.dev-reset-held
+title: apps dev --reset while a session is live exits dev_session_held with apps_dev_reset_held
+behaviours: [B2]
+command: apps dev
+argv: [apps, dev, --reset]
+credentials: stored
+project: dev-basic
+mock: platform_dev
+mock_seed: { held_until: "2026-10-20T15:00:00Z", render_url: "https://shy-owl-1.trycloudflare.com/" }
+expect:
+  exit: dev_session_held
+  stdout: { empty: true }
+  stderr: { message: apps_dev_reset_held, vars: { name: luba } }

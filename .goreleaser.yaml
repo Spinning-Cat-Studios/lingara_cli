@@ -1,0 +1,100 @@
+# The Go kit's release artefacts (ADR 16.10.26af D4): six archives of the
+# `lingara` binary, SHA256SUMS over them, and the Homebrew formula. Built by
+# release.yml's Go leg with `goreleaser release --clean --skip=publish`, in
+# staging and in lingara_cli alike; the GitHub Release itself is the
+# workflow's one github-release job's, never goreleaser's, so a Release has
+# one writer. CI's go-release-snapshot job (16.10.26af AC8) runs the same
+# file with --snapshot.
+#
+# Byte-identical rebuilds: -trimpath and CGO_ENABLED=0; every timestamp that
+# could enter an archive is the commit's (the binary's mod_timestamp, the
+# archive entries' builds_info and LICENSE's info.mtime); the entries' owner
+# and mode are fixed too, so the builder's user name never enters a tar
+# header; and the archive's file list is explicit, so no checkout-time file
+# or mtime enters it.
+version: 2
+
+project_name: lingara
+
+builds:
+  - id: lingara
+    # The module is go/ (getlingara.com/cli); the tag is the repo-wide
+    # v<VERSION> (16.10.26ab D5), so no monorepo tag prefix is needed.
+    dir: go
+    main: ./cmd/lingara
+    binary: lingara
+    env:
+      - CGO_ENABLED=0
+    goos: [darwin, linux, windows]
+    goarch: [amd64, arm64]
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w -X getlingara.com/cli/internal/commands.Version={{ .Version }}
+    mod_timestamp: "{{ .CommitTimestamp }}"
+
+archives:
+  - id: lingara
+    ids: [lingara]
+    # The tag, `v` included: languages.toml's `uploaded` admits only
+    # `{version}`, which release-manifest and scs-snapshot's verify.assets
+    # substitute with the tag (ADR 22.10.26s §2). The binary's own stamp
+    # stays {{ .Version }}, so --version prints no `v`.
+    name_template: "lingara_{{ .Tag }}_{{ .Os }}_{{ .Arch }}"
+    formats: [tar.gz]
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+    builds_info:
+      owner: root
+      group: root
+      mode: 0755
+      mtime: "{{ .CommitDate }}"
+    # LICENSE only, replacing goreleaser's default README*/CHANGELOG* globs.
+    files:
+      - src: LICENSE
+        info:
+          owner: root
+          group: root
+          mode: 0644
+          mtime: "{{ .CommitDate }}"
+
+checksum:
+  # What docs/install/go.md and the formula check. github-release's own
+  # checksums.txt covers every asset on the Release besides.
+  name_template: SHA256SUMS
+  algorithm: sha256
+
+# The Release is github-release's (D4); the notes are the tagged commit's
+# message body, so goreleaser writes neither.
+release:
+  disable: true
+
+changelog:
+  disable: true
+
+brews:
+  - name: lingara
+    ids: [lingara]
+    repository:
+      owner: Spinning-Cat-Studios
+      name: homebrew-tap
+      # A fine-grained token scoped to homebrew-tap alone, in lingara_cli's
+      # release environment (D4). Read only when the formula is pushed: a
+      # --snapshot or --skip=publish build runs with it unset (measured with
+      # goreleaser v2.11.2).
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    directory: Formula
+    url_template: "https://github.com/Spinning-Cat-Studios/lingara_cli/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
+    homepage: "https://github.com/Spinning-Cat-Studios/lingara_cli"
+    description: "lingara, the Lingara developer CLI"
+    license: MIT
+    # Homebrew's `lingara` is the Go kit (ADR 22.10.26s §7). Only
+    # release.yml's publish-go pushes the formula, in lingara_cli's release
+    # environment, after the Release's archives are published and a local
+    # rebuild's SHA256SUMS has matched them. Every other run is --snapshot or
+    # --skip=publish, which runs no publisher.
+    install: |
+      bin.install "lingara"
+    test: |
+      system "#{bin}/lingara", "--version"

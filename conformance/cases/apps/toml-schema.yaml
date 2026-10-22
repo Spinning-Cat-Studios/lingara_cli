@@ -1,0 +1,12 @@
+# 16.10.26ae AC6 — secret_values_are_refused_offline
+id: apps.toml-schema
+title: An unknown schema is refused with platform_toml_schema before anything else is read
+behaviours: [B2]
+command: apps list
+argv: [apps, list, --pinned]
+credentials: stored
+project: toml-schema
+expect:
+  exit: platform_toml_schema
+  stdout: { empty: true }
+  stderr: { message: platform_toml_schema }

@@ -1,0 +1,18 @@
+id: op.logout
+title: logout revokes the refresh token (RFC 7009) and forgets the stored credential
+behaviours: [B6]
+command: logout
+argv: [logout, --json]
+credentials: stored
+expect:
+  exit: ok
+  stdout: { json: {} }
+  stored_credentials: absent
+exchanges:
+  order: sequence
+  items:
+    - route: oauth.revoke
+      request:
+        headers: { authorization: { equals: "Bearer lgr_at_conformance_stored" } }
+        form: { token: lgr_rt_conformance_stored, token_type_hint: refresh_token, client_id: lingara-cli }
+      response: { status: 200 }

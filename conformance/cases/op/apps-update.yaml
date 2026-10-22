@@ -1,0 +1,46 @@
+id: op.apps-update
+title: With a draft open, update edits that draft at its draft_version (keeping its icon) rather than making a second, then publishes it
+behaviours: [B1, B5]
+command: apps update
+argv: [apps, update, 7d1e2f30-0000-4000-8000-000000000001, --manifest, "{fixtures}/manifests/flashcards.json", --json]
+credentials: stored
+expect:
+  exit: ok
+  stdout:
+    json: { version: { semver: "1.1.0", state: published }, projection_pending: false }
+exchanges:
+  order: sequence
+  items:
+    - route: app.get
+      vars: { id: 7d1e2f30-0000-4000-8000-000000000001 }
+      response:
+        status: 200
+        json:
+          id: 7d1e2f30-0000-4000-8000-000000000001
+          visibility: private
+          serving_version: "1.0.0"
+          versions: [ { semver: "1.1.0", state: changes_requested }, { semver: "1.0.0", state: published } ]
+    - route: app.version_get
+      vars: { id: 7d1e2f30-0000-4000-8000-000000000001, semver: "1.1.0" }
+      response: { status: 200, json: { semver: "1.1.0", draft_version: 2, body: { manifest: { name: { en: Old } }, icon_key: icon-1 } } }
+    - route: app.version_put
+      vars: { id: 7d1e2f30-0000-4000-8000-000000000001, semver: "1.1.0" }
+      request:
+        json:
+          draft_version: 2
+          body:
+            icon_key: icon-1
+            manifest:
+              manifest_version: 1
+              default_locale: en
+              name: { en: Flashcards }
+              description: { en: Cards after a lesson }
+              render_url: https://cards.example.com/render
+              slots: [lesson.end]
+              context: []
+              scopes: []
+              tutor_note: false
+      response: { status: 200, json: { semver: "1.1.0", state: changes_requested, draft_version: 3 } }
+    - route: app.publish
+      vars: { id: 7d1e2f30-0000-4000-8000-000000000001, semver: "1.1.0" }
+      response: { status: 200, json: { version: { semver: "1.1.0", state: published }, projection_pending: false } }

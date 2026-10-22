@@ -1,0 +1,52 @@
+{
+  "schema": 1,
+  "binary": "lingara",
+  "exit_codes": [
+    { "code": 0, "name": "ok", "summary": "Done." },
+    { "code": 1, "name": "failure", "summary": "Anything else." },
+    { "code": 2, "name": "usage", "summary": "A parse error." },
+    { "code": 3, "name": "auth_required", "summary": "Sign in." },
+    { "code": 4, "name": "not_found", "summary": "No such object." },
+    { "code": 5, "name": "refused", "summary": "The server said no." },
+    { "code": 6, "name": "not_confirmed", "summary": "Not confirmed." },
+    { "code": 7, "name": "unavailable", "summary": "Try later." },
+    { "code": 8, "name": "platform_disabled", "summary": "Not enabled yet.", "message": "platform_disabled" },
+    { "code": 130, "name": "interrupted", "summary": "Ctrl-C." }
+  ],
+  "global_flags": [
+    { "name": "json", "type": "bool" },
+    { "name": "profile", "type": "string", "value_name": "name", "env": "LINGARA_PROFILE" }
+  ],
+  "flag_groups": {
+    "confirm": [
+      { "name": "yes", "short": "y", "type": "bool" },
+      { "name": "confirm", "type": "string", "value_name": "email" }
+    ]
+  },
+  "commands": [
+    { "name": "login", "flags": [ { "name": "device", "type": "bool" } ], "exit_codes": ["auth_required", "platform_disabled"] }
+  ],
+  "topics": [
+    { "name": "oauth_client", "aliases": ["client"], "summary": "OAuth clients.",
+      "commands": [
+        { "name": "list", "output": { "columns": ["ID", "NAME"] } },
+        { "name": "create",
+          "flags": [
+            { "name": "name", "type": "string", "required": true },
+            { "name": "type", "type": "enum", "values": ["confidential", "public"], "default": "confidential" },
+            { "name": "ci", "type": "bool" }
+          ],
+          "conflicts": [["ci", "type"]] },
+        { "name": "delete", "args": [ { "name": "id", "type": "string", "required": true } ], "flag_groups": ["confirm"],
+          "dangerous": true, "messages": ["consequence_oauth_client"], "exit_codes": ["not_found", "not_confirmed"],
+          "examples": [ { "argv": "lingara client delete oc_123 -y --confirm dev@example.com", "summary": "Delete from CI" } ] }
+      ],
+      "topics": [
+        { "name": "secret", "commands": [ { "name": "create", "args": [ { "name": "client_id", "type": "string", "required": true } ] } ] }
+      ] },
+    { "name": "webhook",
+      "topics": [
+        { "name": "inbound", "commands": [ { "name": "create", "flags": [ { "name": "name", "type": "string", "required": true } ] } ] }
+      ] }
+  ]
+}

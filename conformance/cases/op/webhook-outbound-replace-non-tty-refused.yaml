@@ -1,0 +1,11 @@
+id: op.webhook-outbound-replace-non-tty-refused
+title: In a pipe without both flags, replace is refused before any request, its lookups included
+behaviours: [B3]
+command: webhook outbound replace
+confirm: non_tty_refused
+argv: [webhook, outbound, replace, 3c5d7e9f-0000-4000-8000-000000000001, --url, https://hooks.example.com/v2]
+credentials: stored
+expect:
+  exit: not_confirmed
+  stdout: { empty: true }
+  stderr: { message: confirm_non_tty_refused }

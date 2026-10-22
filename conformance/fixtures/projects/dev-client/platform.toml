@@ -1,0 +1,15 @@
+# An `apps dev` project whose session mints the client pair too, with
+# non-secret [apps.env] values and an env_file (ADR 16.10.26ae D4, D5).
+schema = 1
+
+[[apps]]
+name = "luba"
+id = "7d1e2f30-0000-4000-8000-000000000001"
+path = "."
+port = {free_port}
+start = "$LINGARA_CONFORMANCE_FAKE_APP"
+credentials = ["app_secret", "client_credentials"]
+env_file = ".env.local"
+
+[apps.env]
+LUBA_PLAN_ID = "plan-1"

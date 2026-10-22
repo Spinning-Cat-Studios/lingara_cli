@@ -1,0 +1,30 @@
+id: op.canvas-delete-tty-ok
+title: In a terminal, the lookup and the object's read fill the prompt, which says the objects it made stay
+behaviours: [B3]
+command: canvas delete
+confirm: tty_ok
+argv: [canvas, delete, 9f8e7d6c-0000-4000-8000-000000000001]
+tty: true
+credentials: stored
+interact:
+  - expect: { message: confirm_yes_no, vars: { kind: canvas, name: My flow, id: 9f8e7d6c-0000-4000-8000-000000000001 } }
+  - expect: { message: consequence_canvas }
+    send: "y\n"
+  - expect: { message: confirm_type_email }
+    send: "dev@conformance.invalid\n"
+expect:
+  exit: ok
+  stdout: { empty: true }
+exchanges:
+  order: sequence
+  items:
+    - route: canvas.lookup
+      request: { query: { runtime_id: 9f8e7d6c-0000-4000-8000-000000000001 } }
+      response: { status: 200, json: { items: [ { id: 9f8e7d6c-0000-4000-8000-0000000000aa, kind: canvas } ], next_cursor: null } }
+    - route: canvas.object_get
+      vars: { id: 9f8e7d6c-0000-4000-8000-0000000000aa }
+      response: { status: 200, json: { id: 9f8e7d6c-0000-4000-8000-0000000000aa, kind: canvas, name: My flow, pinned_by: 0 } }
+    - route: canvas.delete
+      vars: { id: 9f8e7d6c-0000-4000-8000-0000000000aa }
+      request: { json: { confirm: dev@conformance.invalid } }
+      response: { status: 200, json: { deleted: 1, pinned_by: 0 } }

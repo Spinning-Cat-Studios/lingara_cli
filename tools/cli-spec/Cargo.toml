@@ -1,0 +1,19 @@
+[package]
+name = "cli-spec"
+version = "0.0.0"
+edition = "2024"
+license = "MIT"
+publish = false
+description = "Checks the lingara command tree (spec/cli.schema.json), renders its reference docs, and diffs a kit's registered tree against it"
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+# The closed shape: every struct is deny_unknown_fields, and path_to_error
+# names the offending JSON path when one is refused (ADR 16.10.26ab D2).
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order"] }
+serde_path_to_error = "0.1"
+regex = "1"
+
+[dev-dependencies]
+tempfile = "3"

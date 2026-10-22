@@ -1,0 +1,13 @@
+# frozen_string_literal: true
+
+source "https://rubygems.org"
+
+# The gem itself: Thor, tomlrb and json_schemer (ADR 16.10.26af D2).
+gemspec
+
+# Development only, pinned: the test runner and the style lint, whose
+# RuboCop also carries the size and complexity budgets (.rubocop.yml).
+group :development do
+  gem "minitest", "5.25.5"
+  gem "standard", "1.56.0"
+end

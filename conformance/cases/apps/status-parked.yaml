@@ -1,0 +1,13 @@
+# 16.10.26ae AC15 — status_shows_live_parked_and_serving
+id: apps.status-parked
+title: apps status prints a parked dev version with the last URL it pointed at
+behaviours: [B1]
+command: apps status
+argv: [apps, status, luba]
+credentials: stored
+project: dev-basic
+mock: platform_dev
+mock_seed: { render_url: "https://shy-owl-1.trycloudflare.com/" }
+expect:
+  exit: ok
+  stdout: { contains: ["dev: parked (last https://shy-owl-1.trycloudflare.com/)"] }

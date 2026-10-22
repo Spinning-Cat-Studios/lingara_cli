@@ -1,0 +1,12 @@
+# 16.10.26ae AC4 — registers_when_logged_in_and_hints_when_not
+id: apps.create-login-hint
+title: Without a session, create still scaffolds and pins the project, prints the lingara login hint, sends nothing and exits ok
+behaviours: [B1]
+command: apps create
+argv: [apps, create, demo]
+credentials: none
+expect:
+  exit: ok
+  stdout: { empty: true }
+  stderr: { message: apps_create_login_hint, vars: { name: demo } }
+  files: { golden: apps-create/typescript }

@@ -1,0 +1,11 @@
+# platform.toml.example — checked in. Copy it to platform.toml (gitignored),
+# then run lingara apps update to register your own private copy of each app.
+schema = 1
+
+[[apps]]
+name = "demo"
+id = "00000000-0000-0000-0000-000000000000"
+path = "."
+port = 8787
+start = "cargo run --quiet --bin app"
+manifest_command = "cargo run --quiet --bin manifest"

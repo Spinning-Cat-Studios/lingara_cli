@@ -1,0 +1,3 @@
+platform.toml
+.env.local
+target/

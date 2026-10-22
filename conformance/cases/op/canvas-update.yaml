@@ -1,0 +1,17 @@
+id: op.canvas-update
+title: canvas update renames the canvas through renameCanvas
+behaviours: [B1]
+command: canvas update
+argv: [canvas, update, 9f8e7d6c-0000-4000-8000-000000000001, --name, Renamed flow, --json]
+credentials: stored
+expect:
+  exit: ok
+  stdout:
+    json: { id: 9f8e7d6c-0000-4000-8000-000000000001, name: Renamed flow }
+exchanges:
+  order: sequence
+  items:
+    - route: canvas.rename
+      vars: { id: 9f8e7d6c-0000-4000-8000-000000000001 }
+      request: { json: { name: Renamed flow } }
+      response: { status: 200, json: { id: 9f8e7d6c-0000-4000-8000-000000000001, name: Renamed flow } }

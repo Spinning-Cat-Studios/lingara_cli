@@ -1,0 +1,2 @@
+start = "php server.php"
+manifest = "lingara/connection.js"

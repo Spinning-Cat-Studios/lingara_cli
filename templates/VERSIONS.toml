@@ -1,0 +1,24 @@
+# templates/VERSIONS.toml — the app-kit release each template pins (ADR
+# 16.10.26ae D2). One version for all seven: the app SDK releases its kits
+# together. The floor is the first release carrying ADR 16.10.26aj D8's
+# `localise` seed region (`createMessages` and its siblings), which landed
+# after 0.1.0-alpha.7, so the templates pin the release after it.
+#
+# A template writes this version literally in its build file (package.json,
+# Cargo.toml, go.mod, build.gradle.kts, Gemfile, composer.json), so a bump is
+# this line and those files, in one commit, and an ordinary CLI release.
+# `make check-template-pins` (advisory) compares it with the app SDK's newest
+# release tag; `make templates-smoke LANG=<id>` proves a template still builds
+# and passes its own offline test against it.
+
+app_kit = "0.1.0-alpha.8"
+
+# Where each language's kit is published (the app SDK's languages.toml).
+[packages]
+typescript = "npm:@lingara/apps"
+rust = "crates.io:lingara-apps"
+go = "go:github.com/Spinning-Cat-Studios/lingara_app_framework_sdk/go"
+java = "maven-central:com.getlingara:lingara-apps-java"
+kotlin = "maven-central:com.getlingara:lingara-apps-kotlin"
+ruby = "rubygems:lingara-apps"
+php = "packagist:spinningcatstudios/lingara-apps"

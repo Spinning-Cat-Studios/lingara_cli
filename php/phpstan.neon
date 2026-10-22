@@ -1,0 +1,13 @@
+# PHPStan over the kit, its tests and its entry script (ADR 16.10.26af,
+# Files to Change). Level 8: every type the code declares is checked, null
+# included. Not `max`, whose one extra rule refuses `mixed` everywhere it
+# flows: this kit holds the platform's JSON as decoded `mixed` on purpose
+# (contract B1 prints it back unchanged), and reads it through `Json`'s
+# narrowing helpers instead.
+parameters:
+    level: 8
+    paths:
+        - src
+        - tests
+        - bin/lingara
+    tmpDir: vendor/.phpstan

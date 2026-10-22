@@ -1,0 +1,29 @@
+id: b7.draft-creates-nothing
+title: canvas draft saves the definition at the draft's version and sends no create of any kind
+behaviours: [B7]
+command: canvas draft
+argv: [canvas, draft, 9f8e7d6c-0000-4000-8000-000000000001, --file, "{fixtures}/canvases/recipe.json", --json]
+credentials: stored
+expect:
+  exit: ok
+  stdout:
+    json: { id: 9f8e7d6c-0000-4000-8000-000000000001, name: My flow, draft: { revision: 1, draft_version: 1, objects: {} } }
+exchanges:
+  order: sequence
+  items:
+    - route: canvas.get
+      vars: { id: 9f8e7d6c-0000-4000-8000-000000000001 }
+      response: { status: 200, json: { id: 9f8e7d6c-0000-4000-8000-000000000001, name: My flow, draft: null, active: null } }
+    - route: canvas.put_draft
+      vars: { id: 9f8e7d6c-0000-4000-8000-000000000001 }
+      request:
+        json:
+          draft_version: 0
+          definition:
+            schema: 2
+            nodes:
+              - { id: n1, kind: client, position: [0, 0], fields: { name: My server, scopes: ["events:read"] }, script: null, custom: false, script_name: null, params: {} }
+              - { id: n2, kind: secret, position: [0, 120], fields: {}, script: null, custom: false, script_name: null, params: {} }
+              - { id: n3, kind: webhook, position: [240, 0], fields: { url: "https://hooks.example.com/lingara", events: [lesson_plan.ready] }, script: null, custom: false, script_name: null, params: {} }
+            edges: [ { from: n1, to: n2 }, { from: n1, to: n3 } ]
+      response: { status: 200, json: { id: 9f8e7d6c-0000-4000-8000-000000000001, name: My flow, draft: { revision: 1, draft_version: 1, objects: {} } } }

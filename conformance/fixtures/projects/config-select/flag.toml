@@ -1,0 +1,6 @@
+schema = 1
+
+[[apps]]
+name = "from-flag"
+path = "."
+port = 8787

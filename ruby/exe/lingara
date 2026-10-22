@@ -1,0 +1,9 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# `lingara`, the Ruby kit (ADR 16.10.26af D6). `Main.main` returns the exit
+# code after writing stdout once, so the process exits normally, never by
+# signal (D9).
+require_relative "../lib/lingara/cli"
+
+exit Lingara::CLI::Main.main(ARGV)

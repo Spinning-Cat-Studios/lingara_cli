@@ -1,0 +1,42 @@
+id: b7.apply-partial-on-rate-limit
+title: A 429 on an inner create is never retried; apply activates partial, exits unavailable and names the wait
+behaviours: [B7, B5]
+command: canvas apply
+argv: [canvas, apply, 9f8e7d6c-0000-4000-8000-000000000001]
+credentials: stored
+expect:
+  exit: unavailable
+  stdout: { contains: ["HANDLE  KIND  ACTION  ID"] }
+  # canvas_apply_partial's text, beside the wait the 429 named.
+  stderr: { contains: ["(rate_limited)", "retry after 30 s", "Applied 0 of 1. Run lingara canvas apply 9f8e7d6c-0000-4000-8000-000000000001 again to continue."] }
+exchanges:
+  order: sequence
+  items:
+    - route: canvas.get
+      vars: { id: 9f8e7d6c-0000-4000-8000-000000000001 }
+      response:
+        status: 200
+        json:
+          id: 9f8e7d6c-0000-4000-8000-000000000001
+          active: null
+          draft:
+            draft_version: 4
+            objects: {}
+            definition:
+              schema: 2
+              nodes: [ { id: n1, kind: client, position: [0, 0], fields: { name: My server, scopes: [] }, script: null, custom: false, script_name: null, params: {} } ]
+              edges: []
+    - route: oauth_client.list
+      response: { status: 200, json: { items: [], next_cursor: null } }
+    - route: webhook_outbound.list
+      response: { status: 200, json: { items: [], next_cursor: null } }
+    - route: app.list
+      response: { status: 200, json: { items: [], next_cursor: null } }
+    - route: canvas.dry_run
+      response: { status: 200, json: { ok: true, verdicts: [ { handle: n1, kind: client, op: create, verdict: would_create } ] } }
+    - route: oauth_client.create
+      response: { status: 429, headers: { retry-after: "30" }, json: { code: rate_limited, error: Too many creates this hour. } }
+    - route: canvas.activate
+      vars: { id: 9f8e7d6c-0000-4000-8000-000000000001 }
+      request: { json: { draft_version: 4, outcome: partial, objects: {} } }
+      response: { status: 200, json: { id: 9f8e7d6c-0000-4000-8000-000000000001 } }

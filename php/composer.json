@@ -1,0 +1,50 @@
+{
+    "name": "spinningcatstudios/lingara-cli",
+    "description": "lingara, the Lingara developer CLI: OAuth clients, apps, embeds, webhooks and canvases",
+    "type": "library",
+    "license": "MIT",
+    "keywords": ["lingara", "cli", "oauth", "webhooks"],
+    "homepage": "https://github.com/Spinning-Cat-Studios/lingara_cli",
+    "support": {
+        "source": "https://github.com/Spinning-Cat-Studios/lingara_cli"
+    },
+    "require": {
+        "php": ">=8.2",
+        "devium/toml": "^1.1",
+        "opis/json-schema": "^2.6",
+        "symfony/console": "^7.4",
+        "symfony/http-client": "^7.4",
+        "symfony/process": "^7.4"
+    },
+    "require-dev": {
+        "phpstan/phpstan": "^2.1",
+        "phpunit/phpunit": "^11.5",
+        "slevomat/coding-standard": "^8.20",
+        "squizlabs/php_codesniffer": "^3.13"
+    },
+    "suggest": {
+        "ext-pcntl": "lingara apps dev on macOS and Linux: traps Ctrl-C and SIGTERM so the session parks and its children stop",
+        "ext-posix": "lingara apps dev on macOS and Linux: starts the app and the tunnel in their own process groups and stops each whole group"
+    },
+    "autoload": {
+        "psr-4": {
+            "Lingara\\Cli\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Lingara\\Cli\\Tests\\": "tests/"
+        }
+    },
+    "bin": ["bin/lingara"],
+    "config": {
+        "platform": {
+            "php": "8.2.0"
+        },
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": false
+        },
+        "sort-packages": true
+    },
+    "minimum-stability": "stable"
+}

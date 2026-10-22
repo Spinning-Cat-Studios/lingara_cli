@@ -1,0 +1,28 @@
+id: op.webhook-outbound-list
+title: webhook outbound list --json prints one array of every page's items, unrenamed
+behaviours: [B1]
+command: webhook outbound list
+argv: [webhook, outbound, list, --json]
+credentials: stored
+expect:
+  exit: ok
+  stdout:
+    json:
+      - { id: 3c5d7e9f-0000-4000-8000-000000000001, kind: webhook_out, parent_id: 0b9c4f0e-0000-4000-8000-000000000001, enabled: true }
+      - { id: 3c5d7e9f-0000-4000-8000-000000000002, kind: webhook_out, parent_id: 0b9c4f0e-0000-4000-8000-000000000001, enabled: false }
+exchanges:
+  order: sequence
+  items:
+    - route: webhook_outbound.list
+      response:
+        status: 200
+        json:
+          items: [ { id: 3c5d7e9f-0000-4000-8000-000000000001, kind: webhook_out, parent_id: 0b9c4f0e-0000-4000-8000-000000000001, enabled: true } ]
+          next_cursor: 3c5d7e9f-0000-4000-8000-000000000001
+    - route: webhook_outbound.list
+      request: { query: { cursor: 3c5d7e9f-0000-4000-8000-000000000001 } }
+      response:
+        status: 200
+        json:
+          items: [ { id: 3c5d7e9f-0000-4000-8000-000000000002, kind: webhook_out, parent_id: 0b9c4f0e-0000-4000-8000-000000000001, enabled: false } ]
+          next_cursor: null

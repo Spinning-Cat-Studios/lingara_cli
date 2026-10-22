@@ -1,0 +1,103 @@
+id: b7.apply-in-plan-order
+title: apply reads, dry-runs, then runs its own verbs in plan order; an unchanged client makes no call, a would_update webhook is one update (body, then enable)
+behaviours: [B7]
+command: canvas apply
+argv: [canvas, apply, 9f8e7d6c-0000-4000-8000-000000000001, --json]
+credentials: stored
+expect:
+  exit: ok
+  stdout:
+    json:
+      objects:
+        n1: { id: 1a1a1a1a-0000-4000-8000-000000000001 }
+        n2: { id: 4d4d4d4d-0000-4000-8000-000000000001 }
+        n3: { id: 1c1c1c1c-0000-4000-8000-000000000003 }
+        n4: { id: 1c1c1c1c-0000-4000-8000-000000000004 }
+      secrets: [ { handle: n4, id: 4d4d4d4d-0000-4000-8000-000000000004, value: lgr_cs_conformance_n4 } ]
+      status: complete
+exchanges:
+  order: sequence
+  items:
+    - route: canvas.get
+      vars: { id: 9f8e7d6c-0000-4000-8000-000000000001 }
+      response:
+        status: 200
+        json:
+          id: 9f8e7d6c-0000-4000-8000-000000000001
+          name: My flow
+          active: null
+          draft:
+            revision: 3
+            draft_version: 7
+            objects: { n1: { id: 1a1a1a1a-0000-4000-8000-000000000001 }, n2: { id: 4d4d4d4d-0000-4000-8000-000000000001 }, n3: { id: 1c1c1c1c-0000-4000-8000-000000000003 } }
+            definition:
+              schema: 2
+              nodes:
+                - { id: n1, kind: client, position: [0, 0], fields: { name: My server, scopes: ["events:read"] }, script: null, custom: false, script_name: null, params: {} }
+                - { id: n2, kind: secret, position: [0, 0], fields: {}, script: null, custom: false, script_name: null, params: {} }
+                - { id: n3, kind: webhook, position: [0, 0], fields: { url: "https://hooks.example.com/v2", events: [lesson_plan.ready] }, script: null, custom: false, script_name: null, params: {} }
+                - { id: n4, kind: webhook, position: [0, 0], fields: { url: "https://hooks.example.com/second", events: [lesson_plan.ready] }, script: null, custom: false, script_name: null, params: {} }
+              edges: [ { from: n1, to: n2 }, { from: n1, to: n3 }, { from: n1, to: n4 } ]
+    - route: oauth_client.list
+      response: { status: 200, json: { items: [ { id: 0b9c4f0e-0000-4000-8000-000000000001, kind: oauth_client, runtime_id: 1a1a1a1a-0000-4000-8000-000000000001, parent_id: null } ], next_cursor: null } }
+    - route: webhook_outbound.list
+      response: { status: 200, json: { items: [ { id: 3c5d7e9f-0000-4000-8000-000000000003, kind: webhook_out, runtime_id: 1c1c1c1c-0000-4000-8000-000000000003, parent_id: 0b9c4f0e-0000-4000-8000-000000000001 } ], next_cursor: null } }
+    - route: app.list
+      response: { status: 200, json: { items: [], next_cursor: null } }
+    - route: canvas.dry_run
+      request:
+        json:
+          ops:
+            - { handle: n1, kind: client, op: update, id: 1a1a1a1a-0000-4000-8000-000000000001, body: { name: My server, scopes: ["events:read"] } }
+            - { handle: n3, kind: webhook, op: update, id: 1c1c1c1c-0000-4000-8000-000000000003, body: { url: "https://hooks.example.com/v2", event_types: [lesson_plan.ready] } }
+            - { handle: n4, kind: webhook, op: create, client: { handle: n1 }, body: { url: "https://hooks.example.com/second", event_types: [lesson_plan.ready] } }
+      response:
+        status: 200
+        json:
+          ok: true
+          verdicts:
+            - { handle: n1, kind: client, op: update, verdict: would_update, changes: [] }
+            - { handle: n3, kind: webhook, op: update, verdict: would_update, changes: [url, enabled] }
+            - { handle: n4, kind: webhook, op: create, verdict: would_create, depends_on: [n1] }
+    # n3: `webhook outbound update <id> --url … --enable`, the body update then the object-level route.
+    - route: webhook_outbound.get
+      vars: { id: 3c5d7e9f-0000-4000-8000-000000000003 }
+      response: { status: 200, json: { id: 3c5d7e9f-0000-4000-8000-000000000003, visibility: private, serving_version: "1.0.0", versions: [ { semver: "1.0.0", state: published } ] } }
+    - route: webhook_outbound.version_get
+      vars: { id: 3c5d7e9f-0000-4000-8000-000000000003, semver: "1.0.0" }
+      response: { status: 200, json: { semver: "1.0.0", body: { url: "https://hooks.example.com/v1", event_types: [lesson_plan.ready] } } }
+    - route: webhook_outbound.version_create
+      vars: { id: 3c5d7e9f-0000-4000-8000-000000000003 }
+      request: { json: { body: { url: "https://hooks.example.com/v2", event_types: [lesson_plan.ready] } } }
+      response: { status: 201, json: { semver: "1.1.0" } }
+    - route: webhook_outbound.publish
+      vars: { id: 3c5d7e9f-0000-4000-8000-000000000003, semver: "1.1.0" }
+      response: { status: 200, json: { version: { semver: "1.1.0", state: published } } }
+    - route: webhook_outbound.enable
+      vars: { id: 3c5d7e9f-0000-4000-8000-000000000003 }
+      response: { status: 200, json: { enabled: true } }
+    # n4: `webhook outbound create --client <the recorded client's platform id> …`.
+    - route: webhook_outbound.create
+      request: { json: { kind: webhook_out, name: "https://hooks.example.com/second", parent_id: 0b9c4f0e-0000-4000-8000-000000000001, body: { url: "https://hooks.example.com/second", event_types: [lesson_plan.ready] } } }
+      response: { status: 201, json: { id: 3c5d7e9f-0000-4000-8000-000000000004, visibility: private, version: { semver: "1.0.0" } } }
+    - route: webhook_outbound.publish
+      vars: { id: 3c5d7e9f-0000-4000-8000-000000000004, semver: "1.0.0" }
+      response: { status: 200, json: { version: { semver: "1.0.0", state: published } } }
+    - route: webhook_outbound.secret_create
+      vars: { id: 3c5d7e9f-0000-4000-8000-000000000004 }
+      response: { status: 201, json: { secret_id: 4d4d4d4d-0000-4000-8000-000000000004, secret: lgr_cs_conformance_n4 } }
+    - route: webhook_outbound.get
+      vars: { id: 3c5d7e9f-0000-4000-8000-000000000004 }
+      response: { status: 200, json: { id: 3c5d7e9f-0000-4000-8000-000000000004, kind: webhook_out, runtime_id: 1c1c1c1c-0000-4000-8000-000000000004 } }
+    - route: canvas.activate
+      vars: { id: 9f8e7d6c-0000-4000-8000-000000000001 }
+      request:
+        json:
+          draft_version: 7
+          outcome: complete
+          objects:
+            n1: { id: 1a1a1a1a-0000-4000-8000-000000000001 }
+            n2: { id: 4d4d4d4d-0000-4000-8000-000000000001 }
+            n3: { id: 1c1c1c1c-0000-4000-8000-000000000003 }
+            n4: { id: 1c1c1c1c-0000-4000-8000-000000000004 }
+      response: { status: 200, json: { id: 9f8e7d6c-0000-4000-8000-000000000001, draft: null } }

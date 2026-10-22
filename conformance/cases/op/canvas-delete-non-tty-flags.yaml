@@ -1,0 +1,20 @@
+id: op.canvas-delete-non-tty-flags
+title: Flagged, a canvas delete sends only its lookup, then the /platform/objects delete with the email
+behaviours: [B3]
+command: canvas delete
+confirm: non_tty_flags
+argv: [canvas, delete, 9f8e7d6c-0000-4000-8000-000000000001, -y, --confirm, dev@conformance.invalid]
+credentials: stored
+expect:
+  exit: ok
+  stdout: { empty: true }
+exchanges:
+  order: sequence
+  items:
+    - route: canvas.lookup
+      request: { query: { runtime_id: 9f8e7d6c-0000-4000-8000-000000000001 } }
+      response: { status: 200, json: { items: [ { id: 9f8e7d6c-0000-4000-8000-0000000000aa, kind: canvas, runtime_id: 9f8e7d6c-0000-4000-8000-000000000001 } ], next_cursor: null } }
+    - route: canvas.delete
+      vars: { id: 9f8e7d6c-0000-4000-8000-0000000000aa }
+      request: { json: { confirm: dev@conformance.invalid } }
+      response: { status: 200, json: { deleted: 1, pinned_by: 0 } }

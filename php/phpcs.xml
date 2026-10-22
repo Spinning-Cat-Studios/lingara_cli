@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<!--
+  The PHP kit's size and complexity budgets (ADR 16.10.26af, Files to Change:
+  "the PHPCS budgets at the API clients' numbers"), the repository's numbers
+  from .code-health/thresholds.toml: a source file at most 300 lines (a test
+  file 600), a function at most 50, cyclomatic complexity at most 10. Budget
+  sniffs only. The other budgets (at most five parameters, fifteen functions
+  per file, fifteen files per folder) have no sniff and are
+  tests/BudgetsTest.php.
+-->
+<ruleset name="lingara-cli-budgets">
+    <!-- Relative to PHP_CodeSniffer's own directory, so any working directory works. -->
+    <config name="installed_paths" value="../../slevomat/coding-standard"/>
+
+    <file>src</file>
+    <file>tests</file>
+    <file>bin/lingara</file>
+
+    <arg name="extensions" value="php"/>
+    <arg value="s"/>
+
+    <rule ref="SlevomatCodingStandard.Files.FileLength">
+        <properties>
+            <property name="maxLinesLength" value="300"/>
+            <property name="includeComments" value="true"/>
+            <property name="includeWhitespace" value="true"/>
+        </properties>
+        <exclude-pattern>tests/*</exclude-pattern>
+    </rule>
+    <rule ref="SlevomatCodingStandard.Functions.FunctionLength">
+        <properties>
+            <property name="maxLinesLength" value="50"/>
+        </properties>
+    </rule>
+    <rule ref="Generic.Metrics.CyclomaticComplexity">
+        <properties>
+            <property name="complexity" value="10"/>
+            <property name="absoluteComplexity" value="10"/>
+        </properties>
+    </rule>
+</ruleset>

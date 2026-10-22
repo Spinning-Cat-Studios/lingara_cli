@@ -1,0 +1,9 @@
+id: op.oauth-client-create-ci-scope-conflict
+title: --ci fixes the scopes, so --ci with --scope is usage and sends nothing
+behaviours: [B2]
+command: oauth_client create
+argv: [client, create, --name, x, --ci, --scope, events:read]
+credentials: stored
+expect:
+  exit: usage
+  stdout: { empty: true }

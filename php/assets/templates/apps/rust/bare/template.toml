@@ -1,0 +1,2 @@
+start = "cargo run --quiet --bin app"
+manifest_command = "cargo run --quiet --bin manifest"

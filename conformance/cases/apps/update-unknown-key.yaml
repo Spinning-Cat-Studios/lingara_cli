@@ -1,0 +1,12 @@
+# 16.10.26ae AC5 — literal_subset_and_scripted_refusal
+id: apps.update-unknown-key
+title: A manifest key outside the literal map is refused, not passed through, at its position and before any request
+behaviours: [B2]
+command: apps update
+argv: [apps, update]
+credentials: stored
+project: update-unknown-key
+expect:
+  exit: usage
+  stdout: { empty: true }
+  stderr: { contains: ["lingara/connection.js:5:79:", "(connection_literal)"] }

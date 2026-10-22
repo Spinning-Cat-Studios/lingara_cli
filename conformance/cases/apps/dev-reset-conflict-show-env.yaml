@@ -1,0 +1,9 @@
+id: apps.dev-reset-conflict-show-env
+title: apps dev refuses --reset with --show-env, since --reset does one thing only, as usage before any request
+behaviours: [B2]
+command: apps dev
+argv: [apps, dev, --reset, --show-env]
+credentials: stored
+expect:
+  exit: usage
+  stdout: { empty: true }

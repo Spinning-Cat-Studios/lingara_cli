@@ -1,0 +1,4 @@
+platform.toml
+.env.local
+.gradle/
+build/

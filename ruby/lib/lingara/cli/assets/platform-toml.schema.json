@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://getlingara.com/schemas/cli/platform-toml/1",
+  "title": "platform.toml",
+  "description": "ADR 16.10.26ae D4: the per-developer file `lingara apps` reads, as the JSON its TOML parses to. Every kit validates against these rules before it sends a request; the secret refusal (platform_toml_secret) is a separate check, run first.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema"],
+  "properties": {
+    "schema": { "const": 1 },
+    "platform": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "api": { "type": "string", "pattern": "^https?://" },
+        "profile": { "type": "string", "minLength": 1 }
+      }
+    },
+    "apps": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/app" }
+    }
+  },
+  "$defs": {
+    "app": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "path"],
+      "properties": {
+        "name": { "type": "string", "pattern": "^[a-z][a-z0-9-]{0,39}$" },
+        "id": { "type": "string", "minLength": 1 },
+        "path": { "type": "string", "minLength": 1 },
+        "port": { "type": "integer", "minimum": 1, "maximum": 65535 },
+        "start": { "type": "string", "minLength": 1 },
+        "render_path": { "type": "string", "pattern": "^/" },
+        "manifest": { "type": "string", "minLength": 1 },
+        "manifest_command": { "type": "string", "minLength": 1 },
+        "credentials": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "enum": ["app_secret", "client_credentials"] }
+        },
+        "env_file": { "type": "string", "minLength": 1 },
+        "env": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        }
+      },
+      "not": { "required": ["manifest", "manifest_command"] }
+    }
+  }
+}

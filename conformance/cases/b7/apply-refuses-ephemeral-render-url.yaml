@@ -1,0 +1,43 @@
+id: b7.apply-refuses-ephemeral-render-url
+title: An app node whose manifest renders from a quick tunnel refuses apply at plan time, naming the node, before the dry-run and with zero writes (16.10.26ad D7 step 2)
+behaviours: [B7]
+command: canvas apply
+argv: [canvas, apply, 9f8e7d6c-0000-4000-8000-000000000001]
+credentials: stored
+expect:
+  exit: render_url_ephemeral
+  stdout: { empty: true }
+  stderr: { message: render_url_ephemeral, vars: { file: "node n2's manifest" } }
+exchanges:
+  order: sequence
+  items:
+    - route: canvas.get
+      vars: { id: 9f8e7d6c-0000-4000-8000-000000000001 }
+      response:
+        status: 200
+        json:
+          id: 9f8e7d6c-0000-4000-8000-000000000001
+          active: null
+          draft:
+            draft_version: 1
+            objects: {}
+            definition:
+              schema: 2
+              nodes:
+                - { id: n1, kind: client, position: [0, 0], fields: { name: Luba, scopes: [] }, script: null, custom: false, script_name: null, params: {} }
+                - id: n2
+                  kind: app
+                  position: [0, 120]
+                  fields:
+                    manifest: { name: Luba, description: Dives., renderUrl: "https://shy-owl-1.trycloudflare.com/", slots: [home.side] }
+                  script: null
+                  custom: false
+                  script_name: null
+                  params: {}
+              edges: [ { from: n1, to: n2 } ]
+    - route: oauth_client.list
+      response: { status: 200, json: { items: [], next_cursor: null } }
+    - route: webhook_outbound.list
+      response: { status: 200, json: { items: [], next_cursor: null } }
+    - route: app.list
+      response: { status: 200, json: { items: [], next_cursor: null } }

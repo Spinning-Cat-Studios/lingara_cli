@@ -1,0 +1,10 @@
+# An `apps dev` project (ADR 16.10.26ae D11): `start` runs the fake app the
+# runner names, and `{free_port}` is a free port the runner fills in.
+schema = 1
+
+[[apps]]
+name = "luba"
+id = "7d1e2f30-0000-4000-8000-000000000001"
+path = "."
+port = {free_port}
+start = "$LINGARA_CONFORMANCE_FAKE_APP"

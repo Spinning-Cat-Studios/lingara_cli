@@ -1,0 +1,4 @@
+platform.toml
+.env.local
+node_modules/
+dist/

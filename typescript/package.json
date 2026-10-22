@@ -1,0 +1,54 @@
+{
+  "name": "@lingara/cli",
+  "version": "0.1.0-alpha.1",
+  "description": "lingara, the Lingara developer CLI: OAuth clients, apps, embeds, webhooks and canvases",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "lingara": "./bin/run.js"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Spinning-Cat-Studios/lingara_cli.git",
+    "directory": "typescript"
+  },
+  "homepage": "https://getlingara.com",
+  "files": [
+    "bin/",
+    "dist/",
+    "assets/",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "lint": "eslint src test",
+    "test": "tsc -p tsconfig.json --noEmit && vitest run && eslint src test"
+  },
+  "dependencies": {
+    "@napi-rs/keyring": "^1.1.0",
+    "@oclif/core": "^4.0.0",
+    "open": "^10.1.0",
+    "smol-toml": "^1.9.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "@types/node": "^22.0.0",
+    "eslint": "^9.0.0",
+    "typescript": "^5.6.0",
+    "typescript-eslint": "^8.0.0",
+    "vitest": "^3.0.0"
+  },
+  "oclif": {
+    "bin": "lingara",
+    "dirname": "lingara",
+    "commands": {
+      "strategy": "explicit",
+      "target": "./dist/commands.js",
+      "identifier": "COMMANDS"
+    },
+    "topicSeparator": " "
+  }
+}

@@ -1,0 +1,15 @@
+# 16.10.26ae AC15 — status_shows_live_parked_and_serving
+id: apps.status-live
+title: apps status reads the dev version and prints a live session's URL and when its lease ends
+behaviours: [B1]
+command: apps status
+argv: [apps, status]
+credentials: stored
+project: dev-basic
+mock: platform_dev
+mock_seed: { held_until: "2026-10-20T15:00:00Z", render_url: "https://shy-owl-1.trycloudflare.com/" }
+expect:
+  exit: ok
+  stdout: { contains: ["dev: live https://shy-owl-1.trycloudflare.com/ (lease until 15:00"] }
+  calls:
+    - route: app_dev.get

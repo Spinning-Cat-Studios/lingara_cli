@@ -1,0 +1,27 @@
+id: op.oauth-client-create-partial
+title: A create that fails after its secret was minted still reveals the secret on stdout and names the client it made
+behaviours: [B1, B2]
+command: oauth_client create
+argv: [client, create, --name, My server, --json]
+credentials: stored
+expect:
+  exit: unavailable
+  stdout:
+    json: { secret: { id: 4d4d4d4d-0000-4000-8000-000000000001, value: lgr_cs_conformance_partial } }
+  stderr: { contains: ['"made"', 0b9c4f0e-0000-4000-8000-000000000001] }
+exchanges:
+  order: sequence
+  items:
+    - route: oauth_client.create
+      response:
+        status: 201
+        json: { id: 0b9c4f0e-0000-4000-8000-000000000001, visibility: private, version: { semver: "1.0.0" } }
+    - route: oauth_client.publish
+      vars: { id: 0b9c4f0e-0000-4000-8000-000000000001, semver: "1.0.0" }
+      response: { status: 200, json: { version: { semver: "1.0.0", state: published } } }
+    - route: oauth_client.secret_create
+      vars: { id: 0b9c4f0e-0000-4000-8000-000000000001 }
+      response: { status: 201, json: { secret_id: 4d4d4d4d-0000-4000-8000-000000000001, secret: lgr_cs_conformance_partial } }
+    - route: oauth_client.get
+      vars: { id: 0b9c4f0e-0000-4000-8000-000000000001 }
+      response: { status: 503, text: down for maintenance }

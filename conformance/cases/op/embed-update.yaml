@@ -1,0 +1,32 @@
+id: op.embed-update
+title: --name renames the embed, and --origin replaces the origins in a new version that the private embed publishes
+behaviours: [B1]
+command: embed update
+argv: [embed, update, 5e3a0c11-0000-4000-8000-000000000001, --name, Word game 2, --origin, https://new.example, --json]
+credentials: stored
+expect:
+  exit: ok
+  stdout:
+    json: { version: { semver: "1.1.0", state: published } }
+exchanges:
+  order: sequence
+  items:
+    - route: embed.rename
+      vars: { id: 5e3a0c11-0000-4000-8000-000000000001 }
+      request: { json: { name: Word game 2 } }
+      response: { status: 200, json: { id: 5e3a0c11-0000-4000-8000-000000000001, name: Word game 2 } }
+    - route: embed.get
+      vars: { id: 5e3a0c11-0000-4000-8000-000000000001 }
+      response:
+        status: 200
+        json: { id: 5e3a0c11-0000-4000-8000-000000000001, visibility: private, serving_version: "1.0.0", versions: [ { semver: "1.0.0", state: published } ] }
+    - route: embed.version_get
+      vars: { id: 5e3a0c11-0000-4000-8000-000000000001, semver: "1.0.0" }
+      response: { status: 200, json: { semver: "1.0.0", body: { origins: ["https://old.example"] } } }
+    - route: embed.version_create
+      vars: { id: 5e3a0c11-0000-4000-8000-000000000001 }
+      request: { json: { body: { origins: ["https://new.example"] } } }
+      response: { status: 201, json: { semver: "1.1.0", state: draft } }
+    - route: embed.publish
+      vars: { id: 5e3a0c11-0000-4000-8000-000000000001, semver: "1.1.0" }
+      response: { status: 200, json: { version: { semver: "1.1.0", state: published } } }

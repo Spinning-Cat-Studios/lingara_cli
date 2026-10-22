@@ -1,0 +1,33 @@
+id: b6.device
+title: login --device shows the code, keeps polling through authorization_pending, adds 5 s after slow_down, then stores the developer
+behaviours: [B6]
+command: login
+argv: [login, --device]
+credentials: none
+expect:
+  exit: ok
+  stdout: { empty: true }
+  stderr: { message: login_device_code, vars: { user_code: ABCD-EFGH } }
+  redacted: [lgr_at_conformance_device]
+  stored_credentials: present
+exchanges:
+  order: sequence
+  items:
+    - route: oauth.device_authorization
+      request:
+        headers: { authorization: { absent: true } }
+        form: { client_id: lingara-cli, scope: "platform:read platform:write canvas:read canvas:write" }
+      response: { status: 200, json: { device_code: dc1, user_code: ABCD-EFGH, verification_uri: "{base_url}/device", interval: 1, expires_in: 600 } }
+    - route: oauth.token
+      min_gap_ms: 900
+      request: { form: { grant_type: "urn:ietf:params:oauth:grant-type:device_code", device_code: dc1, client_id: lingara-cli } }
+      response: { status: 400, json: { error: authorization_pending } }
+    - route: oauth.token
+      min_gap_ms: 900
+      response: { status: 400, json: { error: slow_down } }
+    - route: oauth.token
+      min_gap_ms: 5500
+      response: { status: 200, json: { access_token: lgr_at_conformance_device, refresh_token: lgr_rt_conformance_device, token_type: Bearer, expires_in: 3600 } }
+    - route: developer.me
+      request: { headers: { authorization: { equals: "Bearer lgr_at_conformance_device" } } }
+      response: { status: 200, json: { developer_id: 0b9c4f0e-0000-4000-8000-0000000000de, email: dev@conformance.invalid } }

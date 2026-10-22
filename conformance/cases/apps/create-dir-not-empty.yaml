@@ -1,0 +1,11 @@
+id: apps.create-dir-not-empty
+title: A --dir that exists and holds a file is refused with dir_not_empty, and nothing is written into it
+behaviours: [B2]
+command: apps create
+argv: [apps, create, demo, --dir, ., --no-register]
+project: create-dir
+expect:
+  exit: usage
+  stdout: { empty: true }
+  stderr: { message: dir_not_empty }
+  files: { present: [create-dir/existing.txt] }

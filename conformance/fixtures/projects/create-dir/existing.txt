@@ -1,0 +1,1 @@
+A file already here: `apps create --dir .` refuses this directory (dir_not_empty).

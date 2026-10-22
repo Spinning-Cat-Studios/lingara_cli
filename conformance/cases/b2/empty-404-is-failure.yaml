@@ -1,0 +1,15 @@
+id: b2.empty-404-is-failure
+title: An empty-body 404 is an unexpected response, never a credential failure, so nothing refreshes
+behaviours: [B2]
+command: apps list
+argv: [apps, list]
+credentials: stored
+expect:
+  exit: failure
+  stdout: { empty: true }
+  stderr: { contains: [app.list] }
+exchanges:
+  order: sequence
+  items:
+    - route: app.list
+      response: { status: 404 }

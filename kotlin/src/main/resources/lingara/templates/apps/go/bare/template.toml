@@ -1,0 +1,2 @@
+start = "go run ./cmd/app"
+manifest_command = "go run ./cmd/manifest"

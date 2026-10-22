@@ -1,0 +1,6 @@
+schema = 1
+
+[[apps]]
+name = "from-nearest"
+path = "."
+port = 8787

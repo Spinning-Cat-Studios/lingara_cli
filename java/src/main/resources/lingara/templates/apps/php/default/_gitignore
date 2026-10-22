@@ -1,0 +1,4 @@
+platform.toml
+.env.local
+vendor/
+.phpunit.cache/

@@ -1,0 +1,11 @@
+{
+  "manifest_version": 1,
+  "default_locale": "en",
+  "name": { "en": "Flashcards" },
+  "description": { "en": "Cards after a lesson" },
+  "render_url": "https://shy-owl-1.trycloudflare.com/render",
+  "slots": ["lesson.end"],
+  "context": [],
+  "scopes": [],
+  "tutor_note": false
+}

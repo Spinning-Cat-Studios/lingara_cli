@@ -1,0 +1,10 @@
+id: b6.login-ci-not-needed
+title: Under CI credentials login is usage, says why, and sends nothing
+behaviours: [B6]
+command: login
+argv: [login]
+credentials: ci
+expect:
+  exit: usage
+  stdout: { empty: true }
+  stderr: { message: login_ci_not_needed }

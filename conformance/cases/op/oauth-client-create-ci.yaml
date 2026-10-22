@@ -1,0 +1,41 @@
+id: op.oauth-client-create-ci
+title: --ci makes a confidential client holding the four platform and canvas scopes, and the human output shows the secret once
+behaviours: [B1]
+command: oauth_client create
+argv: [client, create, --name, Release pipeline, --ci]
+credentials: stored
+expect:
+  exit: ok
+  stdout:
+    table:
+      columns: [FIELD, VALUE]
+      rows:
+        - [id, 0b9c4f0e-0000-4000-8000-000000000002]
+        - [name, Release pipeline]
+        - [SECRET, lgr_cs_conformance_ci_once]
+  stderr: { contains: [shown once] }
+exchanges:
+  order: sequence
+  items:
+    - route: oauth_client.create
+      request:
+        json:
+          kind: oauth_client
+          name: Release pipeline
+          body:
+            client_type: confidential
+            allowed_scopes: ["platform:read", "platform:write", "canvas:read", "canvas:write"]
+            billing_mode: allowance
+            redirect_uris: []
+      response:
+        status: 201
+        json: { id: 0b9c4f0e-0000-4000-8000-000000000002, visibility: private, version: { semver: "1.0.0" } }
+    - route: oauth_client.publish
+      vars: { id: 0b9c4f0e-0000-4000-8000-000000000002, semver: "1.0.0" }
+      response: { status: 200, json: { version: { semver: "1.0.0", state: published } } }
+    - route: oauth_client.secret_create
+      vars: { id: 0b9c4f0e-0000-4000-8000-000000000002 }
+      response: { status: 201, json: { secret_id: 4d4d4d4d-0000-4000-8000-000000000002, secret: lgr_cs_conformance_ci_once } }
+    - route: oauth_client.get
+      vars: { id: 0b9c4f0e-0000-4000-8000-000000000002 }
+      response: { status: 200, json: { id: 0b9c4f0e-0000-4000-8000-000000000002, name: Release pipeline } }

@@ -1,0 +1,16 @@
+id: b6.logout-offline
+title: A revoke that fails still forgets the stored credential, warns, and exits ok
+behaviours: [B6]
+command: logout
+argv: [logout]
+credentials: stored
+expect:
+  exit: ok
+  stdout: { empty: true }
+  stderr: { contains: [could not be revoked] }
+  stored_credentials: absent
+exchanges:
+  order: sequence
+  items:
+    - route: oauth.revoke
+      response: { status: 503, text: down for maintenance }

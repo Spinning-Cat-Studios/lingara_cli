@@ -1,0 +1,39 @@
+id: op.webhook-outbound-replace-delete-refused
+title: When the new endpoint is made and the old delete is refused, the new secret is still on stdout and both ids are on stderr
+behaviours: [B3, B2]
+command: webhook outbound replace
+argv: [webhook, outbound, replace, 3c5d7e9f-0000-4000-8000-000000000001, --url, https://hooks.example.com/v2, -y, --confirm, dev@conformance.invalid, --json]
+credentials: stored
+expect:
+  exit: refused
+  stdout:
+    json: { id: 3c5d7e9f-0000-4000-8000-000000000002, kind: webhook_out, secret: { id: 4d4d4d4d-0000-4000-8000-000000000008, value: lgr_cs_conformance_kept } }
+  stderr: { contains: [delete_confirmation_mismatch, 3c5d7e9f-0000-4000-8000-000000000001, 3c5d7e9f-0000-4000-8000-000000000002] }
+exchanges:
+  order: sequence
+  items:
+    - route: webhook_outbound.get
+      vars: { id: 3c5d7e9f-0000-4000-8000-000000000001 }
+      response:
+        status: 200
+        json: { id: 3c5d7e9f-0000-4000-8000-000000000001, kind: webhook_out, parent_id: 0b9c4f0e-0000-4000-8000-000000000001, serving_version: "1.0.0" }
+    - route: webhook_outbound.version_get
+      vars: { id: 3c5d7e9f-0000-4000-8000-000000000001, semver: "1.0.0" }
+      response: { status: 200, json: { semver: "1.0.0", body: { url: https://hooks.example.com/lingara, event_types: [lesson_plan.ready] } } }
+    - route: webhook_outbound.create
+      request:
+        json: { kind: webhook_out, name: https://hooks.example.com/v2, parent_id: 0b9c4f0e-0000-4000-8000-000000000001, body: { url: https://hooks.example.com/v2, event_types: [lesson_plan.ready] } }
+      response: { status: 201, json: { id: 3c5d7e9f-0000-4000-8000-000000000002, visibility: private, version: { semver: "1.0.0" } } }
+    - route: webhook_outbound.publish
+      vars: { id: 3c5d7e9f-0000-4000-8000-000000000002, semver: "1.0.0" }
+      response: { status: 200, json: { version: { semver: "1.0.0", state: published } } }
+    - route: webhook_outbound.secret_create
+      vars: { id: 3c5d7e9f-0000-4000-8000-000000000002 }
+      response: { status: 201, json: { secret_id: 4d4d4d4d-0000-4000-8000-000000000008, secret: lgr_cs_conformance_kept } }
+    - route: webhook_outbound.get
+      vars: { id: 3c5d7e9f-0000-4000-8000-000000000002 }
+      response: { status: 200, json: { id: 3c5d7e9f-0000-4000-8000-000000000002, kind: webhook_out } }
+    - route: webhook_outbound.delete
+      vars: { id: 3c5d7e9f-0000-4000-8000-000000000001 }
+      request: { json: { confirm: dev@conformance.invalid } }
+      response: { status: 422, json: { code: delete_confirmation_mismatch, error: That is not the email this account holds. } }

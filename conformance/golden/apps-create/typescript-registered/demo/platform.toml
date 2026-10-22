@@ -1,0 +1,11 @@
+# platform.toml — gitignored; copy from platform.toml.example.
+# Never put a secret here. lingara refuses to read a value that looks like one.
+schema = 1
+
+[[apps]]
+name = "demo"
+id = "7d1e2f30-0000-4000-8000-000000000001"
+path = "."
+port = 8787
+start = "npm start"
+manifest = "lingara/connection.js"

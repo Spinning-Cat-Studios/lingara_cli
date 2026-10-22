@@ -1,0 +1,19 @@
+id: b3.non-tty-flags
+title: In a pipe, -y and a matching --confirm send exactly one request, the DELETE, carrying the canonical email
+behaviours: [B3, B5]
+command: oauth_client delete
+confirm: non_tty_flags
+argv: [client, delete, 0b9c4f0e-0000-4000-8000-000000000001, -y, --confirm, Dev@Conformance.invalid]
+credentials: stored
+expect:
+  exit: ok
+  stdout: { empty: true }
+exchanges:
+  order: sequence
+  items:
+    - route: oauth_client.delete
+      vars: { id: 0b9c4f0e-0000-4000-8000-000000000001 }
+      request:
+        headers: { content-type: { prefix: application/json } }
+        json: { confirm: dev@conformance.invalid }
+      response: { status: 204 }

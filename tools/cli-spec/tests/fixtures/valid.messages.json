@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "messages": [
+    { "id": "confirm_yes_no", "text": "Delete {kind} {name} ({id})?" },
+    { "id": "confirm_type_email", "text": "Type your developer email ({hint}) to confirm:" },
+    { "id": "confirm_declined", "text": "Not confirmed." },
+    { "id": "confirm_email_mismatch", "text": "That is not your developer email." },
+    { "id": "confirm_non_tty_refused", "text": "Refusing to delete without confirmation." },
+    { "id": "consequence_oauth_client", "text": "Deleted with it: apps {apps}." },
+    { "id": "platform_disabled", "text": "Not enabled yet." }
+  ]
+}

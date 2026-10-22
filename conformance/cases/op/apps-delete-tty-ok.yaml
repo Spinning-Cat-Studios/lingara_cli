@@ -1,0 +1,27 @@
+id: op.apps-delete-tty-ok
+title: In a terminal, the prompt names the app and its client, then y and the email delete it
+behaviours: [B3]
+command: apps delete
+confirm: tty_ok
+argv: [apps, delete, 7d1e2f30-0000-4000-8000-000000000001]
+tty: true
+credentials: stored
+interact:
+  - expect: { message: confirm_yes_no, vars: { kind: app, name: Flashcards, id: 7d1e2f30-0000-4000-8000-000000000001 } }
+  - expect: { message: consequence_app, vars: { client: 0b9c4f0e-0000-4000-8000-000000000001 } }
+    send: "y\n"
+  - expect: { message: confirm_type_email }
+    send: "dev@conformance.invalid\n"
+expect:
+  exit: ok
+  stdout: { empty: true }
+exchanges:
+  order: sequence
+  items:
+    - route: app.get
+      vars: { id: 7d1e2f30-0000-4000-8000-000000000001 }
+      response: { status: 200, json: { id: 7d1e2f30-0000-4000-8000-000000000001, kind: app, name: Flashcards, parent_id: 0b9c4f0e-0000-4000-8000-000000000001, pinned_by: 0 } }
+    - route: app.delete
+      vars: { id: 7d1e2f30-0000-4000-8000-000000000001 }
+      request: { json: { confirm: dev@conformance.invalid } }
+      response: { status: 200, json: { deleted: 2, pinned_by: 0 } }

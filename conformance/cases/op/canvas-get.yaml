@@ -1,0 +1,16 @@
+id: op.canvas-get
+title: canvas get reads the /v1 canvas by the builder's id
+behaviours: [B1]
+command: canvas get
+argv: [canvas, get, 9f8e7d6c-0000-4000-8000-000000000001, --json]
+credentials: stored
+expect:
+  exit: ok
+  stdout:
+    json: { id: 9f8e7d6c-0000-4000-8000-000000000001, name: My flow, draft: null, active: null }
+exchanges:
+  order: sequence
+  items:
+    - route: canvas.get
+      vars: { id: 9f8e7d6c-0000-4000-8000-000000000001 }
+      response: { status: 200, json: { id: 9f8e7d6c-0000-4000-8000-000000000001, name: My flow, draft: null, active: null } }

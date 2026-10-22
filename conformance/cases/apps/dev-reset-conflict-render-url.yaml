@@ -1,0 +1,9 @@
+id: apps.dev-reset-conflict-render-url
+title: apps dev refuses --reset with --render-url, since --reset does one thing only, as usage before any request
+behaviours: [B2]
+command: apps dev
+argv: [apps, dev, --reset, --render-url, "https://example.test/"]
+credentials: stored
+expect:
+  exit: usage
+  stdout: { empty: true }

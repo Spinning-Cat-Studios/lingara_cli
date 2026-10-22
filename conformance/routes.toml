@@ -1,0 +1,137 @@
+# conformance/routes.toml — every developer route a case calls, by a logical
+# name (ADR 16.10.26ac D4). A case names `route: oauth_client.delete`, never
+# the path, so a Backend rename is one line here and no case.
+#
+# Paths from Backend 16.10.26u (/platform/developer, /oauth/*) and 16.10.26v
+# (/platform/objects), plus 16.10.26x (/v1/canvases) for canvas content.
+# Never the session-only routes (roadmap 16.10.26r D5). Route names follow
+# the CLI's words (`oauth_client`, `app`, `webhook_outbound`), not Backend's
+# kinds, and several names may share one path.
+#
+# Each kit spells every path below once, in its own routes module
+# (`rust/src/http/routes.rs`, `typescript/src/lib/routes.ts`), because a
+# published package carries only its own directory (ADR 16.10.26ad D2). A
+# spelling that differs from this file meets the mock's 599 and fails.
+#
+# Every top-level key sits above `[route]`: TOML reads a key written after a
+# table header as a member of that table.
+
+confirm_body_field = "confirm"                                   # 16.10.26v §7
+platform_disabled_code = "platform_disabled"                     # 16.10.26s D6
+platform_access_code = "platform_access_not_enabled"             # 16.10.26u §4: the 403 `code`
+                                                                 #   and /oauth/token's `lingara_code`
+
+# What I1 counts as destructive: every `*.delete`, every `*.delete_version`
+# and the secret revoke (ADR 16.10.26ad D2). Every DELETE must be listed (the
+# runner refuses a file that omits one). `webhook outbound replace` is a
+# create followed by `webhook_outbound.delete`, so that row covers it.
+destructive = [
+  "oauth_client.delete", "oauth_client.delete_version", "oauth_client.secret_delete",
+  "app.delete", "app.delete_version", "app_dev.session_end",
+  "embed.delete", "embed.delete_version",
+  "webhook_inbound.delete", "webhook_inbound.delete_version",
+  "webhook_outbound.delete", "webhook_outbound.delete_version",
+  "canvas.delete", "canvas.delete_version",
+]
+
+[route]
+# Sign-in (16.10.26u §6–§8). `oauth.authorize` is the browser's page on the
+# portal base; the runner points LINGARA_PLATFORM_URL at the same mock.
+"oauth.authorize"             = "GET /oauth/authorize"
+"oauth.device_authorization"  = "POST /oauth/device_authorization"
+"oauth.token"                 = "POST /oauth/token"
+"oauth.revoke"                = "POST /oauth/revoke"
+"developer.me"                = "GET /platform/developer"
+
+# OAuth clients (kind `oauth_client`).
+"oauth_client.list"           = "GET /platform/objects?kind=oauth_client"
+"oauth_client.get"            = "GET /platform/objects/{id}"
+"oauth_client.create"         = "POST /platform/objects"
+"oauth_client.rename"         = "PATCH /platform/objects/{id}"
+"oauth_client.version_get"    = "GET /platform/objects/{id}/versions/{semver}"
+"oauth_client.version_put"    = "PUT /platform/objects/{id}/versions/{semver}"
+"oauth_client.version_create" = "POST /platform/objects/{id}/versions"
+"oauth_client.publish"        = "POST /platform/objects/{id}/versions/{semver}/publish"
+"oauth_client.delete"         = "DELETE /platform/objects/{id}"
+"oauth_client.delete_version" = "DELETE /platform/objects/{id}/versions/{semver}"
+"oauth_client.secret_create"  = "POST /platform/objects/{id}/secrets"
+"oauth_client.secret_delete"  = "DELETE /platform/objects/{id}/secrets/{secret_id}"
+
+# Apps (kind `app`), with the developer's lifecycle verbs (16.10.26v §4).
+"app.list"                    = "GET /platform/objects?kind=app"
+"app.get"                     = "GET /platform/objects/{id}"
+"app.create"                  = "POST /platform/objects"
+"app.version_get"             = "GET /platform/objects/{id}/versions/{semver}"
+"app.version_put"             = "PUT /platform/objects/{id}/versions/{semver}"
+"app.version_create"          = "POST /platform/objects/{id}/versions"
+"app.publish"                 = "POST /platform/objects/{id}/versions/{semver}/publish"
+"app.versions"                = "GET /platform/objects/{id}/versions"
+"app.submit"                  = "POST /platform/objects/{id}/versions/{semver}/submit"
+"app.withdraw"                = "POST /platform/objects/{id}/versions/{semver}/withdraw"
+"app.delete"                  = "DELETE /platform/objects/{id}"
+"app.delete_version"          = "DELETE /platform/objects/{id}/versions/{semver}"
+
+# An app's dev version and its session (16.10.26v §12; 16.10.26ae D11). A
+# case with `mock: platform_dev` has these answered by the runner's model.
+# The session park is `destructive` (16.10.26ac D4); no `apps` command is
+# dangerous, so I1 never judges it.
+"app_dev.get"                 = "GET /platform/objects/{id}/dev"
+"app_dev.patch"               = "PATCH /platform/objects/{id}/dev"
+"app_dev.session_open"        = "POST /platform/objects/{id}/dev/session"
+"app_dev.session_renew"       = "POST /platform/objects/{id}/dev/session/{session_id}/renew"
+"app_dev.session_end"         = "DELETE /platform/objects/{id}/dev/session/{session_id}"
+
+# Embeds (kind `embed`).
+"embed.list"                  = "GET /platform/objects?kind=embed"
+"embed.get"                   = "GET /platform/objects/{id}"
+"embed.create"                = "POST /platform/objects"
+"embed.rename"                = "PATCH /platform/objects/{id}"
+"embed.version_get"           = "GET /platform/objects/{id}/versions/{semver}"
+"embed.version_put"           = "PUT /platform/objects/{id}/versions/{semver}"
+"embed.version_create"        = "POST /platform/objects/{id}/versions"
+"embed.publish"               = "POST /platform/objects/{id}/versions/{semver}/publish"
+"embed.delete"                = "DELETE /platform/objects/{id}"
+"embed.delete_version"        = "DELETE /platform/objects/{id}/versions/{semver}"
+
+# Inbound webhooks (kind `webhook_in`).
+"webhook_inbound.list"           = "GET /platform/objects?kind=webhook_in"
+"webhook_inbound.get"            = "GET /platform/objects/{id}"
+"webhook_inbound.create"         = "POST /platform/objects"
+"webhook_inbound.rename"         = "PATCH /platform/objects/{id}"
+"webhook_inbound.version_get"    = "GET /platform/objects/{id}/versions/{semver}"
+"webhook_inbound.version_put"    = "PUT /platform/objects/{id}/versions/{semver}"
+"webhook_inbound.version_create" = "POST /platform/objects/{id}/versions"
+"webhook_inbound.publish"        = "POST /platform/objects/{id}/versions/{semver}/publish"
+"webhook_inbound.delete"         = "DELETE /platform/objects/{id}"
+"webhook_inbound.delete_version" = "DELETE /platform/objects/{id}/versions/{semver}"
+
+# Outbound webhooks (kind `webhook_out`); enabled state is object-level.
+"webhook_outbound.list"           = "GET /platform/objects?kind=webhook_out"
+"webhook_outbound.get"            = "GET /platform/objects/{id}"
+"webhook_outbound.create"         = "POST /platform/objects"
+"webhook_outbound.version_get"    = "GET /platform/objects/{id}/versions/{semver}"
+"webhook_outbound.version_put"    = "PUT /platform/objects/{id}/versions/{semver}"
+"webhook_outbound.version_create" = "POST /platform/objects/{id}/versions"
+"webhook_outbound.publish"        = "POST /platform/objects/{id}/versions/{semver}/publish"
+"webhook_outbound.secret_create"  = "POST /platform/objects/{id}/secrets"
+"webhook_outbound.enable"         = "POST /platform/objects/{id}/enable"
+"webhook_outbound.disable"        = "POST /platform/objects/{id}/disable"
+"webhook_outbound.test"           = "POST /platform/objects/{id}/test"
+"webhook_outbound.delete"         = "DELETE /platform/objects/{id}"
+"webhook_outbound.delete_version" = "DELETE /platform/objects/{id}/versions/{semver}"
+
+# Canvas content (16.10.26x D1) and lifecycle (16.10.26v §8). `canvas.lookup`
+# names `{id}` in its query, which the mock does not fill: a case sets
+# `request.query.runtime_id` to the canvas id it passes.
+"canvas.list"                 = "GET /v1/canvases"
+"canvas.create"               = "POST /v1/canvases"
+"canvas.get"                  = "GET /v1/canvases/{id}"
+"canvas.rename"               = "PATCH /v1/canvases/{id}"
+"canvas.put_draft"            = "PUT /v1/canvases/{id}/draft"
+"canvas.dry_run"              = "POST /v1/canvases/dry-run"
+"canvas.activate"             = "POST /v1/canvases/{id}/activate"
+"canvas.lookup"               = "GET /platform/objects?kind=canvas&runtime_id={id}"
+"canvas.object_get"           = "GET /platform/objects/{id}"
+"canvas.version_get"          = "GET /platform/objects/{id}/versions/{semver}"
+"canvas.delete"               = "DELETE /platform/objects/{id}"
+"canvas.delete_version"       = "DELETE /platform/objects/{id}/versions/{semver}"

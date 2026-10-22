@@ -1,0 +1,31 @@
+id: apps.update-cuts-a-version
+title: update --version cuts an immutable draft from the project's manifest, never from the dev row, and leaves publishing to apps versions publish
+behaviours: [B1, B5]
+command: apps update
+argv: [apps, update, --version, 1.1.0, --json]
+credentials: stored
+project: update-single-locale
+expect:
+  exit: ok
+  stdout:
+    json: { semver: 1.1.0, state: draft, warnings: [single_locale] }
+  stderr: { message: manifest_warning, vars: { code: single_locale } }
+exchanges:
+  items:
+    - route: app.version_create
+      vars: { id: 7d1e2f30-0000-4000-8000-000000000001 }
+      request:
+        json:
+          semver: 1.1.0
+          body:
+            manifest:
+              manifest_version: 1
+              default_locale: en
+              name: { en: Luba }
+              description: { en: "Your dives, logged." }
+              render_url: "https://dive.example/lingara/render"
+              slots: [home.side]
+              context: []
+              scopes: []
+              tutor_note: false
+      response: { status: 201, json: { semver: 1.1.0, state: draft } }

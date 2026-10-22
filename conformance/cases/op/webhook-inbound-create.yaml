@@ -1,0 +1,40 @@
+id: op.webhook-inbound-create
+title: An inbound webhook is its client, the client's secret, then the webhook_in object; no --event omits event_types, and the sender's door is named
+behaviours: [B1]
+command: webhook inbound create
+argv: [webhook, inbound, create, --name, Game server, --json]
+credentials: stored
+expect:
+  exit: ok
+  stdout:
+    json:
+      id: 2a4b6c8d-0000-4000-8000-000000000001
+      kind: webhook_in
+      name: Game server
+      parent_id: 0b9c4f0e-0000-4000-8000-000000000001
+      client_id: lgr_cid_conformance_sender
+      secret: { id: 4d4d4d4d-0000-4000-8000-000000000004, value: lgr_cs_conformance_sender }
+  stderr: { contains: ["{base_url}/v1/events", lgr_cid_conformance_sender, Idempotency-Key] }
+exchanges:
+  order: sequence
+  items:
+    - route: oauth_client.create
+      request: { json: { kind: oauth_client, name: Game server, body: { client_type: confidential, allowed_scopes: [] } } }
+      response: { status: 201, json: { id: 0b9c4f0e-0000-4000-8000-000000000001, visibility: private, version: { semver: "1.0.0" } } }
+    - route: oauth_client.publish
+      vars: { id: 0b9c4f0e-0000-4000-8000-000000000001, semver: "1.0.0" }
+      response: { status: 200, json: { version: { semver: "1.0.0", state: published } } }
+    - route: oauth_client.secret_create
+      vars: { id: 0b9c4f0e-0000-4000-8000-000000000001 }
+      response: { status: 201, json: { secret_id: 4d4d4d4d-0000-4000-8000-000000000004, secret: lgr_cs_conformance_sender } }
+    - route: webhook_inbound.create
+      request: { json: { kind: webhook_in, name: Game server, parent_id: 0b9c4f0e-0000-4000-8000-000000000001, body: {} } }
+      response: { status: 201, json: { id: 2a4b6c8d-0000-4000-8000-000000000001, visibility: private, version: { semver: "1.0.0" } } }
+    - route: webhook_inbound.publish
+      vars: { id: 2a4b6c8d-0000-4000-8000-000000000001, semver: "1.0.0" }
+      response: { status: 200, json: { version: { semver: "1.0.0", state: published } } }
+    - route: webhook_inbound.get
+      vars: { id: 2a4b6c8d-0000-4000-8000-000000000001 }
+      response:
+        status: 200
+        json: { id: 2a4b6c8d-0000-4000-8000-000000000001, kind: webhook_in, name: Game server, parent_id: 0b9c4f0e-0000-4000-8000-000000000001, client_id: lgr_cid_conformance_sender }

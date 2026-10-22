@@ -1,0 +1,10 @@
+# 16.10.26ae AC1 — scaffold_matches_golden_per_lang
+id: apps.create-kotlin
+title: apps create --no-register writes the Kotlin template byte for byte, with its platform.toml row, example and .gitignore, and sends nothing
+behaviours: [B1]
+command: apps create
+argv: [apps, create, demo, --lang, kotlin, --no-register]
+expect:
+  exit: ok
+  stdout: { empty: true }
+  files: { golden: apps-create/kotlin }

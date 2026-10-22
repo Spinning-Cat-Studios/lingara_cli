@@ -1,0 +1,18 @@
+id: b6.refresh-refused
+title: A refused refresh is auth_required with "run lingara login", and never deletes the stored credential
+behaviours: [B6]
+command: apps list
+argv: [apps, list]
+credentials: stored
+expect:
+  exit: auth_required
+  stdout: { empty: true }
+  stderr: { contains: ["(invalid_grant)", "run `lingara login`"] }
+  stored_credentials: present
+exchanges:
+  order: sequence
+  items:
+    - route: app.list
+      response: { status: 401, headers: { www-authenticate: 'Bearer error="invalid_token"' } }
+    - route: oauth.token
+      response: { status: 400, json: { error: invalid_grant, error_description: The refresh token was revoked. } }

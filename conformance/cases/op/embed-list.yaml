@@ -1,0 +1,23 @@
+id: op.embed-list
+title: embed list prints ID NAME CLIENT ORIGINS SERVING, a list of origins joined by commas
+behaviours: [B1]
+command: embed list
+argv: [embed, list]
+credentials: stored
+expect:
+  exit: ok
+  stdout:
+    table:
+      columns: [ID, NAME, CLIENT, ORIGINS, SERVING]
+      rows:
+        - [5e3a0c11-0000-4000-8000-000000000001, Word game, 0b9c4f0e-0000-4000-8000-000000000001, "https://a.example,https://b.example", "1.0.0"]
+exchanges:
+  order: sequence
+  items:
+    - route: embed.list
+      response:
+        status: 200
+        json:
+          items:
+            - { id: 5e3a0c11-0000-4000-8000-000000000001, kind: embed, name: Word game, parent_id: 0b9c4f0e-0000-4000-8000-000000000001, origins: ["https://a.example", "https://b.example"], serving_version: "1.0.0" }
+          next_cursor: null

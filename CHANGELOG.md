@@ -1,0 +1,16 @@
+# Changelog
+
+## v0.1.0-alpha.1 — 2026-10-23
+
+
+### Added
+
+- The `lingara` CLI's first release, in seven languages.
+
+### Changed
+
+### Fixed
+
+- `apps create --lang kotlin` scaffolds a project whose Kotlin compiler (2.4.10) can read the pinned app kit. Previously the first build failed with a compiler crash.
+
+### Removed

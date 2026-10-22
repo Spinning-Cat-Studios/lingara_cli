@@ -1,0 +1,17 @@
+id: op.apps-submit
+title: submit asks for review with visibility public; review itself stays the operator's
+behaviours: [B1]
+command: apps submit
+argv: [apps, submit, 7d1e2f30-0000-4000-8000-000000000001, --version, "1.1.0", --json]
+credentials: stored
+expect:
+  exit: ok
+  stdout:
+    json: { version: { semver: "1.1.0", state: submitted }, projection_pending: false }
+exchanges:
+  order: sequence
+  items:
+    - route: app.submit
+      vars: { id: 7d1e2f30-0000-4000-8000-000000000001, semver: "1.1.0" }
+      request: { json: { visibility: public } }
+      response: { status: 200, json: { version: { semver: "1.1.0", state: submitted }, projection_pending: false } }

@@ -1,0 +1,14 @@
+# frozen_string_literal: true
+
+# Demo: A Lingara app.
+
+source "https://rubygems.org"
+
+gem "lingara-apps", "0.1.0.pre.alpha.8"
+gem "puma", "~> 6.4"
+gem "rackup", "~> 2.1"
+
+group :test do
+  gem "minitest", "~> 5.25"
+  gem "rack-test", "~> 2.1"
+end

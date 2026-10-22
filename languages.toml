@@ -1,0 +1,109 @@
+# languages.toml — what a release publishes (ADR 16.10.26ab D6).
+#
+# One [[language]] per kit a release ships, with the keys `id`, `registry`,
+# `package`, `binary` and `since`, and the release keys of ADR 22.10.26s §2
+# (`version_files`, `manifest`, `artefact`) read by the clients'
+# release-manifest at the tag make/release.mk pins. A kit joins in the commit
+# that lands it, beside its `LANGS += <id>`, with `since = "next"` until
+# `make bump-version` writes the version. `binary` is always "lingara": every
+# variant installs a command of that name, and the key is kept so a rename is
+# one key per entry; prove-install.sh runs it (clients ADR 22.10.26r W9).
+#
+# Write each `id` on its own line, `id = "<id>"`, with nothing after it: that
+# makes this list readable with grep -E '^id = "[a-z]+"$' as well as a TOML
+# parser. `make check-release-langs` holds the ids equal to $(LANGS).
+#
+# The names, settled so no kit re-decides them:
+#
+#   id          registry       package
+#   typescript  npm            @lingara/cli
+#   rust        crates.io      lingara-cli
+#   ruby        rubygems       lingara-cli (Lingara::CLI)
+#   php         packagist      spinningcatstudios/lingara-cli
+#   go          go             the module path inside this repository
+#   java        maven-central  com.getlingara:lingara-cli-java
+#   kotlin      maven-central  com.getlingara:lingara-cli-kotlin
+
+# The two reference kits (ADR 16.10.26ad D9, D10).
+[[language]]
+id = "rust"
+registry = "crates.io"
+package = "lingara-cli"
+binary = "lingara"
+since = "0.1.0-alpha.1"
+version_files = [{ path = "rust/Cargo.toml", kind = "toml", keys = ["package.version"] }]
+artefact = { built = "target/package/lingara-cli-{semver}.crate", uploaded = "lingara-cli-rust-{version}.crate" }
+
+[[language]]
+id = "typescript"
+registry = "npm"
+package = "@lingara/cli"
+binary = "lingara"
+since = "0.1.0-alpha.1"
+version_files = [
+  { path = "typescript/package.json", kind = "json", keys = ["/version"] },
+  { path = "typescript/package-lock.json", kind = "json", keys = ["/version", "/packages//version"] },
+]
+artefact = { built = "typescript/lingara-cli-{semver}.tgz", uploaded = "lingara-cli-typescript-{version}.tgz" }
+
+# The five kits of ADR 16.10.26af, each listed once every conformance case
+# passes against it (D3). `artefact.uploaded` names the files the build leg
+# hands `github-release` to attach to lingara_cli's Release for v<VERSION>:
+# a list for Go (six archives and SHA256SUMS) and one file for PHP's PHAR
+# (D4, D6). `{version}` is the tag, `v` included, the one placeholder
+# `uploaded` admits, so goreleaser names the archives with `{{ .Tag }}`
+# (22.10.26s §2); `{semver}`, VERSION alone, is for `built`. The other three
+# kits' registries serve what they publish, so they upload nothing. Go, Java
+# and Kotlin carry no version file: goreleaser stamps from the tag, and
+# make/go.mk and Gradle read VERSION.
+[[language]]
+id = "go"
+registry = "go"
+package = "getlingara.com/cli"
+binary = "lingara"
+since = "0.1.0-alpha.1"
+artefact = { built = "dist/", uploaded = [
+  "lingara_{version}_darwin_amd64.tar.gz",
+  "lingara_{version}_darwin_arm64.tar.gz",
+  "lingara_{version}_linux_amd64.tar.gz",
+  "lingara_{version}_linux_arm64.tar.gz",
+  "lingara_{version}_windows_amd64.zip",
+  "lingara_{version}_windows_arm64.zip",
+  "SHA256SUMS",
+] }
+
+[[language]]
+id = "java"
+registry = "maven-central"
+package = "com.getlingara:lingara-cli-java"
+binary = "lingara"
+since = "0.1.0-alpha.1"
+# The root settings.gradle.kts: the one [[manifest]] that stamps both jars.
+manifest = "settings.gradle.kts"
+
+[[language]]
+id = "kotlin"
+registry = "maven-central"
+package = "com.getlingara:lingara-cli-kotlin"
+binary = "lingara"
+since = "0.1.0-alpha.1"
+manifest = "settings.gradle.kts"
+
+[[language]]
+id = "ruby"
+registry = "rubygems"
+package = "lingara-cli"
+binary = "lingara"
+since = "0.1.0-alpha.1"
+# VERSION verbatim, never RubyGems' `.pre.` spelling: Gem::Version normalises
+# it when the gemspec reads the constant (22.10.26s §2, 22.10.26r W10).
+version_files = [{ path = "ruby/lib/lingara/cli/version.rb", kind = "line", keys = ['VERSION = "'] }]
+
+[[language]]
+id = "php"
+registry = "packagist"
+package = "spinningcatstudios/lingara-cli"
+binary = "lingara"
+since = "0.1.0-alpha.1"
+version_files = [{ path = "php/src/Version.php", kind = "line", keys = ["public const VERSION = '"] }]
+artefact = { built = "php/lingara.phar", uploaded = ["lingara.phar"] }

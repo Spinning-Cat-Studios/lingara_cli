@@ -1,0 +1,25 @@
+id: op.webhook-inbound-update
+title: --event replaces the event types by editing the one open draft, a stale draft_version answered 409 refused
+behaviours: [B1, B2]
+command: webhook inbound update
+argv: [webhook, inbound, update, 2a4b6c8d-0000-4000-8000-000000000001, --event, world.practice_completed]
+credentials: stored
+expect:
+  exit: refused
+  stdout: { empty: true }
+  stderr: { contains: ["(version_conflict)"] }
+exchanges:
+  order: sequence
+  items:
+    - route: webhook_inbound.get
+      vars: { id: 2a4b6c8d-0000-4000-8000-000000000001 }
+      response:
+        status: 200
+        json: { id: 2a4b6c8d-0000-4000-8000-000000000001, visibility: private, versions: [ { semver: "1.1.0", state: draft }, { semver: "1.0.0", state: published } ] }
+    - route: webhook_inbound.version_get
+      vars: { id: 2a4b6c8d-0000-4000-8000-000000000001, semver: "1.1.0" }
+      response: { status: 200, json: { semver: "1.1.0", draft_version: 5, body: {} } }
+    - route: webhook_inbound.version_put
+      vars: { id: 2a4b6c8d-0000-4000-8000-000000000001, semver: "1.1.0" }
+      request: { json: { body: { event_types: [world.practice_completed] }, draft_version: 5 } }
+      response: { status: 409, json: { code: version_conflict, error: The draft changed since it was read. } }

@@ -1,0 +1,9 @@
+{
+    "main": "bin/lingara",
+    "output": "lingara.phar",
+    "directories": ["src", "assets", "vendor"],
+    "files": ["composer.json", "LICENSE"],
+    "exclude-dev-files": true,
+    "check-requirements": false,
+    "compression": "NONE"
+}

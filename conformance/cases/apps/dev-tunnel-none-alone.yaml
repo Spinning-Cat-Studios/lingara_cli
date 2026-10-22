@@ -1,0 +1,11 @@
+# 16.10.26ae AC14 — bring_your_own_tunnel
+id: apps.dev-tunnel-none-alone
+title: --tunnel none without --render-url is usage, before any request
+behaviours: [B2]
+command: apps dev
+argv: [apps, dev, --tunnel, none]
+credentials: stored
+project: dev-basic
+expect:
+  exit: usage
+  stdout: { empty: true }

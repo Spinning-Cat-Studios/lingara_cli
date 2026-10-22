@@ -1,0 +1,12 @@
+# 16.10.26ae AC7 — never_moves_a_leased_url_and_refuses_ephemeral_versions
+id: apps.update-version-placeholder
+title: The template's dev.invalid renderUrl makes a first update --version refuse with render_url_ephemeral, naming the fix, before any request
+behaviours: [B2]
+command: apps update
+argv: [apps, update, --version, 1.0.0]
+credentials: stored
+project: update-template
+expect:
+  exit: render_url_ephemeral
+  stdout: { empty: true }
+  stderr: { message: render_url_ephemeral }

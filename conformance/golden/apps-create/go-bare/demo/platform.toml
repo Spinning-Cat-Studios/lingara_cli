@@ -1,0 +1,10 @@
+# platform.toml — gitignored; copy from platform.toml.example.
+# Never put a secret here. lingara refuses to read a value that looks like one.
+schema = 1
+
+[[apps]]
+name = "demo"
+path = "."
+port = 8787
+start = "go run ./cmd/app"
+manifest_command = "go run ./cmd/manifest"

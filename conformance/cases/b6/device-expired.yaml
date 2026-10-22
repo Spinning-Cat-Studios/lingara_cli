@@ -1,0 +1,18 @@
+id: b6.device-expired
+title: A device code that expired before approval is auth_required
+behaviours: [B6]
+command: login
+argv: [login, --device]
+credentials: none
+expect:
+  exit: auth_required
+  stdout: { empty: true }
+  stderr: { contains: [expired] }
+  stored_credentials: absent
+exchanges:
+  order: sequence
+  items:
+    - route: oauth.device_authorization
+      response: { status: 200, json: { device_code: dc1, user_code: ABCD-EFGH, verification_uri: "{base_url}/device", interval: 1 } }
+    - route: oauth.token
+      response: { status: 400, json: { error: expired_token } }

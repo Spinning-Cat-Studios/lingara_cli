@@ -1,0 +1,16 @@
+id: op.webhook-inbound-get
+title: webhook inbound get on an id that is not the caller's is not_found
+behaviours: [B2]
+command: webhook inbound get
+argv: [webhook, inbound, get, 2a4b6c8d-0000-4000-8000-000000000009]
+credentials: stored
+expect:
+  exit: not_found
+  stdout: { empty: true }
+  stderr: { contains: ["(object_not_found)"] }
+exchanges:
+  order: sequence
+  items:
+    - route: webhook_inbound.get
+      vars: { id: 2a4b6c8d-0000-4000-8000-000000000009 }
+      response: { status: 404, json: { code: object_not_found, error: No such object. } }

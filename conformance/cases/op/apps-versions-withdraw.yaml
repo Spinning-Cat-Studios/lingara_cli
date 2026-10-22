@@ -1,0 +1,16 @@
+id: op.apps-versions-withdraw
+title: versions withdraw withdraws a version, and a refusal is refused with the server's code
+behaviours: [B1, B2]
+command: apps versions withdraw
+argv: [apps, versions, withdraw, 7d1e2f30-0000-4000-8000-000000000001, "1.0.0"]
+credentials: stored
+expect:
+  exit: refused
+  stdout: { empty: true }
+  stderr: { contains: ["(version_transition_invalid)"] }
+exchanges:
+  order: sequence
+  items:
+    - route: app.withdraw
+      vars: { id: 7d1e2f30-0000-4000-8000-000000000001, semver: "1.0.0" }
+      response: { status: 409, json: { code: version_transition_invalid, error: That version cannot be withdrawn now. } }

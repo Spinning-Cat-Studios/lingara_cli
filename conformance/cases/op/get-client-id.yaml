@@ -1,0 +1,36 @@
+id: op.get-client-id
+title: apps get --json carries the public client_id unrenamed, as 16.10.26ae's dev session reads it
+behaviours: [B1]
+command: apps get
+argv: [apps, get, 7d1e2f30-0000-4000-8000-000000000001, --json]
+credentials: stored
+expect:
+  exit: ok
+  stdout:
+    json:
+      id: 7d1e2f30-0000-4000-8000-000000000001
+      kind: app
+      name: Flashcards
+      parent_id: 0b9c4f0e-0000-4000-8000-000000000001
+      client_id: lgr_cid_conformance_app
+      serving_version: "1.0.0"
+      versions: [ { semver: "1.0.0", state: published } ]
+      pinned_by: 0
+      children: []
+exchanges:
+  order: sequence
+  items:
+    - route: app.get
+      vars: { id: 7d1e2f30-0000-4000-8000-000000000001 }
+      response:
+        status: 200
+        json:
+          id: 7d1e2f30-0000-4000-8000-000000000001
+          kind: app
+          name: Flashcards
+          parent_id: 0b9c4f0e-0000-4000-8000-000000000001
+          client_id: lgr_cid_conformance_app
+          serving_version: "1.0.0"
+          versions: [ { semver: "1.0.0", state: published } ]
+          pinned_by: 0
+          children: []

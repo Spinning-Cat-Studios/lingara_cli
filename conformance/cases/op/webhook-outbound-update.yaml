@@ -1,0 +1,30 @@
+id: op.webhook-outbound-update
+title: --url is a new version that keeps the endpoint and its secret, and --disable follows it on the object-level route
+behaviours: [B1]
+command: webhook outbound update
+argv: [webhook, outbound, update, 3c5d7e9f-0000-4000-8000-000000000001, --url, https://hooks.example.com/v2, --disable, --json]
+credentials: stored
+expect:
+  exit: ok
+  stdout: { json: { enabled: false } }
+exchanges:
+  order: sequence
+  items:
+    - route: webhook_outbound.get
+      vars: { id: 3c5d7e9f-0000-4000-8000-000000000001 }
+      response:
+        status: 200
+        json: { id: 3c5d7e9f-0000-4000-8000-000000000001, visibility: private, serving_version: "1.0.0", versions: [ { semver: "1.0.0", state: published } ] }
+    - route: webhook_outbound.version_get
+      vars: { id: 3c5d7e9f-0000-4000-8000-000000000001, semver: "1.0.0" }
+      response: { status: 200, json: { semver: "1.0.0", body: { url: https://hooks.example.com/lingara, event_types: [lesson_plan.ready] } } }
+    - route: webhook_outbound.version_create
+      vars: { id: 3c5d7e9f-0000-4000-8000-000000000001 }
+      request: { json: { body: { url: https://hooks.example.com/v2, event_types: [lesson_plan.ready] } } }
+      response: { status: 201, json: { semver: "1.1.0" } }
+    - route: webhook_outbound.publish
+      vars: { id: 3c5d7e9f-0000-4000-8000-000000000001, semver: "1.1.0" }
+      response: { status: 200, json: { version: { semver: "1.1.0", state: published } } }
+    - route: webhook_outbound.disable
+      vars: { id: 3c5d7e9f-0000-4000-8000-000000000001 }
+      response: { status: 200, json: { enabled: false } }

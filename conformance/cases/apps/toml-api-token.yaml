@@ -1,0 +1,12 @@
+# 16.10.26ae AC6 — secret_values_are_refused_offline
+id: apps.toml-api-token
+title: A key whose words include token is refused offline, naming the key
+behaviours: [B2]
+command: apps list
+argv: [apps, list, --pinned]
+credentials: stored
+project: toml-api-token
+expect:
+  exit: platform_toml_secret
+  stdout: { empty: true }
+  stderr: { message: platform_toml_secret, vars: { key: apps.env.API_TOKEN } }

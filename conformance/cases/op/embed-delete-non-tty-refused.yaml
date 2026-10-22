@@ -1,0 +1,11 @@
+id: op.embed-delete-non-tty-refused
+title: In a pipe without both flags, an embed delete is refused before any request
+behaviours: [B3]
+command: embed delete
+confirm: non_tty_refused
+argv: [embed, delete, 5e3a0c11-0000-4000-8000-000000000001, --confirm, dev@conformance.invalid]
+credentials: stored
+expect:
+  exit: not_confirmed
+  stdout: { empty: true }
+  stderr: { message: confirm_non_tty_refused }
